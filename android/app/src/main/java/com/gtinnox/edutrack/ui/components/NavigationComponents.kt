@@ -9,14 +9,19 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Badge
@@ -33,23 +38,154 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gtinnox.edutrack.ui.navigation.BottomNavItem
 import com.gtinnox.edutrack.ui.theme.DeepForest
+import com.gtinnox.edutrack.ui.theme.Dimens
 import com.gtinnox.edutrack.ui.theme.MutedSage
 import com.gtinnox.edutrack.ui.theme.PrimaryForest
-import com.gtinnox.edutrack.ui.theme.SoftBorder
 import com.gtinnox.edutrack.ui.theme.SoftDanger
 import com.gtinnox.edutrack.ui.theme.SoftSage
-import com.gtinnox.edutrack.ui.theme.TextPrimary
-import com.gtinnox.edutrack.ui.theme.TextSecondary
+import com.gtinnox.edutrack.ui.theme.adaptiveHorizontalPadding
+import com.gtinnox.edutrack.ui.theme.isCompactScreen
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 // ==========================================
 // Soft Academia Editorial Header (Directly on Background)
 // ==========================================
+@Composable
+fun AcademicEditorialHeader(
+    title: String,
+    category: String? = null,
+    subtitle: String? = null,
+    onBackClick: (() -> Unit)? = null,
+    onSearchClick: (() -> Unit)? = null,
+    onNotificationsClick: (() -> Unit)? = null,
+    unreadNotificationsCount: Int = 0,
+    trailingAction: (@Composable () -> Unit)? = null,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = Dimens.spaceSmall),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (onBackClick != null) {
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                modifier = Modifier.size(Dimens.iconButtonSize)
+            ) {
+                IconButton(onClick = onBackClick) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(Dimens.iconMedium)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.width(Dimens.spaceMedium))
+        }
+
+        Column(modifier = Modifier.weight(1f)) {
+            if (category != null) {
+                Text(
+                    text = category.uppercase(),
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        letterSpacing = 1.5.sp,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+            }
+            Text(
+                text = title,
+                style = MaterialTheme.typography.headlineLarge,
+                color = MaterialTheme.colorScheme.onBackground,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (subtitle != null) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+
+        if (trailingAction != null) {
+            Spacer(modifier = Modifier.width(Dimens.spaceSmall))
+            trailingAction()
+        } else {
+            if (onSearchClick != null) {
+                Spacer(modifier = Modifier.width(Dimens.spaceSmall))
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    modifier = Modifier.size(Dimens.iconButtonSize)
+                ) {
+                    IconButton(onClick = onSearchClick) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search",
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(Dimens.iconMedium)
+                        )
+                    }
+                }
+            }
+
+            if (onNotificationsClick != null) {
+                Spacer(modifier = Modifier.width(Dimens.spaceSmall))
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    modifier = Modifier.size(Dimens.iconButtonSize)
+                ) {
+                    IconButton(onClick = onNotificationsClick) {
+                        BadgedBox(
+                            badge = {
+                                if (unreadNotificationsCount > 0) {
+                                    Badge(
+                                        containerColor = SoftDanger,
+                                        contentColor = Color.White
+                                    ) {
+                                        Text(
+                                            text = "$unreadNotificationsCount",
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Notifications,
+                                contentDescription = "Notifications",
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.size(Dimens.iconMedium)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Backward-compatible alias
 @Composable
 fun AcademicHeader(
     title: String,
@@ -60,89 +196,20 @@ fun AcademicHeader(
     modifier: Modifier = Modifier
 ) {
     val dateFormatted = LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, MMMM d"))
-
-    Row(
+    AcademicEditorialHeader(
+        title = title,
+        category = dateFormatted,
+        subtitle = subtitle,
+        onSearchClick = onSearchClick,
+        onNotificationsClick = onNotificationsClick,
+        unreadNotificationsCount = unreadNotificationsCount,
         modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = dateFormatted,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = title,
-                style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-            if (subtitle != null) {
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-
-        Surface(
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.surfaceVariant,
-            modifier = Modifier.size(42.dp)
-        ) {
-            IconButton(onClick = onSearchClick) {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "Search",
-                    tint = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.width(10.dp))
-
-        Surface(
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.surfaceVariant,
-            modifier = Modifier.size(42.dp)
-        ) {
-            IconButton(onClick = onNotificationsClick) {
-                BadgedBox(
-                    badge = {
-                        if (unreadNotificationsCount > 0) {
-                            Badge(
-                                containerColor = SoftDanger,
-                                contentColor = Color.White
-                            ) {
-                                Text(
-                                    text = "$unreadNotificationsCount",
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                )
-                            }
-                        }
-                    }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Notifications,
-                        contentDescription = "Notifications",
-                        tint = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            }
-        }
-    }
+    )
 }
 
 // ==========================================
 // Floating Curved Organic Bottom Navigation Bar
+// Symmetrical, Adaptive Width, Inset-Aware
 // ==========================================
 @Composable
 fun EduTrackBottomBar(
@@ -157,23 +224,28 @@ fun EduTrackBottomBar(
         BottomNavItem.More
     )
 
+    val isCompact = isCompactScreen()
+    val horizontalPadding = adaptiveHorizontalPadding()
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 14.dp),
+            .windowInsetsPadding(WindowInsets.navigationBars)
+            .padding(horizontal = horizontalPadding, vertical = 10.dp),
         contentAlignment = Alignment.Center
     ) {
         Surface(
-            shape = RoundedCornerShape(32.dp),
+            shape = RoundedCornerShape(Dimens.radiusPill),
             color = MaterialTheme.colorScheme.surface,
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-            shadowElevation = 4.dp
+            shadowElevation = 4.dp,
+            modifier = Modifier.widthIn(max = Dimens.maxNavWidth)
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceAround,
+                    .padding(horizontal = 6.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 items.forEach { item ->
@@ -187,34 +259,36 @@ fun EduTrackBottomBar(
                     }
                     val bgAnimated by animateColorAsState(targetValue = targetBg, label = "navBg")
 
-                    Surface(
+                    Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
-                            .clickable { onNavigate(item.route) },
-                        shape = RoundedCornerShape(20.dp),
-                        color = bgAnimated
+                            .weight(1f)
+                            .height(44.dp)
+                            .clip(RoundedCornerShape(Dimens.radiusMedium))
+                            .clickable { onNavigate(item.route) }
+                            .background(bgAnimated),
+                        contentAlignment = Alignment.Center
                     ) {
                         Row(
-                            modifier = Modifier.padding(
-                                horizontal = if (isSelected) 14.dp else 10.dp,
-                                vertical = 8.dp
-                            ),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier.padding(horizontal = 4.dp)
                         ) {
                             Icon(
                                 imageVector = item.icon,
                                 contentDescription = item.title,
                                 tint = if (isSelected) PrimaryForest else MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(22.dp)
+                                modifier = Modifier.size(Dimens.iconStandard)
                             )
-                            if (isSelected) {
-                                Spacer(modifier = Modifier.width(6.dp))
+                            if (isSelected && !isCompact) {
+                                Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = item.title,
-                                    style = MaterialTheme.typography.labelLarge.copy(
+                                    style = MaterialTheme.typography.labelMedium.copy(
                                         fontWeight = FontWeight.SemiBold,
                                         color = DeepForest
-                                    )
+                                    ),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }

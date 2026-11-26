@@ -1,6 +1,5 @@
 package com.gtinnox.edutrack.ui.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -42,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.gtinnox.edutrack.data.local.entity.ExaminationEntity
@@ -49,6 +50,7 @@ import com.gtinnox.edutrack.data.local.entity.NoteEntity
 import com.gtinnox.edutrack.data.local.entity.SubjectEntity
 import com.gtinnox.edutrack.data.local.entity.TaskEntity
 import com.gtinnox.edutrack.ui.theme.DeepForest
+import com.gtinnox.edutrack.ui.theme.Dimens
 import com.gtinnox.edutrack.ui.theme.PrimaryForest
 import com.gtinnox.edutrack.ui.theme.SoftSage
 import com.gtinnox.edutrack.ui.theme.SoftSuccess
@@ -71,84 +73,90 @@ fun QuickAddBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+        shape = RoundedCornerShape(topStart = Dimens.radiusPill, topEnd = Dimens.radiusPill),
         containerColor = MaterialTheme.colorScheme.surface
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 12.dp)
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.TopCenter
         ) {
-            Text(
-                text = "Quick Academic Entry",
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = "Select an academic record to log or schedule",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                QuickEntryRow(
-                    title = "Log Study Session",
-                    subtitle = "Record study minutes, subject focus, and notes",
-                    icon = Icons.Default.Timer,
-                    iconBg = SoftSage,
-                    iconColor = PrimaryForest,
-                    onClick = { onDismiss(); onAddSession() }
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .widthIn(max = Dimens.maxDialogWidth)
+                    .padding(horizontal = Dimens.spaceLarge, vertical = Dimens.spaceMedium)
+            ) {
+                Text(
+                    text = "Quick Academic Entry",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "Select an academic record to log or schedule",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                QuickEntryRow(
-                    title = "Add Subject Course",
-                    subtitle = "Enroll a new academic module & target hours",
-                    icon = Icons.AutoMirrored.Filled.MenuBook,
-                    iconBg = SoftSage,
-                    iconColor = DeepForest,
-                    onClick = { onDismiss(); onAddSubject() }
-                )
+                Spacer(modifier = Modifier.height(Dimens.spaceStandard))
 
-                QuickEntryRow(
-                    title = "Create Task / Assignment",
-                    subtitle = "Set homework, lab report, or problem set due date",
-                    icon = Icons.Default.Assignment,
-                    iconBg = SoftTerracotta,
-                    iconColor = SoftWarning,
-                    onClick = { onDismiss(); onAddTask() }
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.spaceSmall)) {
+                    QuickEntryRow(
+                        title = "Log Study Session",
+                        subtitle = "Record study minutes, subject focus, and notes",
+                        icon = Icons.Default.Timer,
+                        iconBg = SoftSage,
+                        iconTint = PrimaryForest,
+                        onClick = { onDismiss(); onAddSession() }
+                    )
 
-                QuickEntryRow(
-                    title = "Schedule Examination",
-                    subtitle = "Track midterm, final, or quiz with countdown",
-                    icon = Icons.Default.School,
-                    iconBg = SoftSage,
-                    iconColor = PrimaryForest,
-                    onClick = { onDismiss(); onAddExam() }
-                )
+                    QuickEntryRow(
+                        title = "Enroll New Course",
+                        subtitle = "Add module, syllabus scope, and weekly quota",
+                        icon = Icons.Default.School,
+                        iconBg = SoftSage,
+                        iconTint = DeepForest,
+                        onClick = { onDismiss(); onAddSubject() }
+                    )
 
-                QuickEntryRow(
-                    title = "Write Revision Note",
-                    subtitle = "Record summary, derivations, and tags",
-                    icon = Icons.Default.Edit,
-                    iconBg = MaterialTheme.colorScheme.surfaceVariant,
-                    iconColor = PrimaryForest,
-                    onClick = { onDismiss(); onAddNote() }
-                )
+                    QuickEntryRow(
+                        title = "New Deliverable / Task",
+                        subtitle = "Track homework, lab write-ups, or problem sets",
+                        icon = Icons.Default.Assignment,
+                        iconBg = SoftTerracotta,
+                        iconTint = SoftWarning,
+                        onClick = { onDismiss(); onAddTask() }
+                    )
 
-                QuickEntryRow(
-                    title = "Add Schedule Block",
-                    subtitle = "Lecture, lab seminar, or office hours slot",
-                    icon = Icons.Default.CalendarMonth,
-                    iconBg = SoftSage,
-                    iconColor = PrimaryForest,
-                    onClick = { onDismiss(); onAddEvent() }
-                )
+                    QuickEntryRow(
+                        title = "Schedule Assessment",
+                        subtitle = "Register midterms, finals, and quiz dates",
+                        icon = Icons.Default.CalendarMonth,
+                        iconBg = SoftTerracotta,
+                        iconTint = PrimaryForest,
+                        onClick = { onDismiss(); onAddExam() }
+                    )
+
+                    QuickEntryRow(
+                        title = "Draft Revision Note",
+                        subtitle = "Capture theorem proofs, formulas, or summaries",
+                        icon = Icons.AutoMirrored.Filled.MenuBook,
+                        iconBg = SoftSage,
+                        iconTint = SoftSuccess,
+                        onClick = { onDismiss(); onAddNote() }
+                    )
+
+                    QuickEntryRow(
+                        title = "Schedule Study Block",
+                        subtitle = "Allocate planned study block on timetable",
+                        icon = Icons.Default.Edit,
+                        iconBg = SoftSage,
+                        iconTint = PrimaryForest,
+                        onClick = { onDismiss(); onAddEvent() }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(28.dp))
             }
-
-            Spacer(modifier = Modifier.height(28.dp))
         }
     }
 }
@@ -159,44 +167,51 @@ private fun QuickEntryRow(
     subtitle: String,
     icon: ImageVector,
     iconBg: Color,
-    iconColor: Color,
+    iconTint: Color,
     onClick: () -> Unit
 ) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(Dimens.radiusMedium),
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.padding(horizontal = Dimens.spaceStandard, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                modifier = Modifier
-                    .size(38.dp)
-                    .background(iconBg, CircleShape),
-                contentAlignment = Alignment.Center
+            Surface(
+                modifier = Modifier.size(Dimens.iconButtonSize),
+                shape = CircleShape,
+                color = iconBg
             ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = iconColor,
-                    modifier = Modifier.size(20.dp)
-                )
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = iconTint,
+                        modifier = Modifier.size(Dimens.iconMedium)
+                    )
+                }
             }
-            Spacer(modifier = Modifier.width(14.dp))
-            Column {
+
+            Spacer(modifier = Modifier.width(Dimens.spaceMedium))
+
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
@@ -216,7 +231,10 @@ fun GlobalSearchDialog(
     var query by remember { mutableStateOf("") }
 
     val matchedSubjects = if (query.isNotBlank()) {
-        subjects.filter { it.name.contains(query, ignoreCase = true) || it.code.contains(query, ignoreCase = true) }
+        subjects.filter {
+            it.name.contains(query, ignoreCase = true) ||
+            it.code.contains(query, ignoreCase = true)
+        }
     } else emptyList()
 
     val matchedTasks = if (query.isNotBlank()) {
@@ -224,42 +242,46 @@ fun GlobalSearchDialog(
     } else emptyList()
 
     val matchedNotes = if (query.isNotBlank()) {
-        notes.filter { it.title.contains(query, ignoreCase = true) || it.content.contains(query, ignoreCase = true) }
+        notes.filter {
+            it.title.contains(query, ignoreCase = true) ||
+            it.content.contains(query, ignoreCase = true)
+        }
     } else emptyList()
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
-            shape = RoundedCornerShape(28.dp),
+            shape = RoundedCornerShape(Dimens.radiusXLarge),
             color = MaterialTheme.colorScheme.surface,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .widthIn(max = Dimens.maxDialogWidth)
+                .padding(Dimens.spaceStandard)
         ) {
-            Column(modifier = Modifier.padding(20.dp)) {
+            Column(modifier = Modifier.padding(Dimens.spaceLarge)) {
                 Text(
                     text = "Academic Search",
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(Dimens.spaceMedium))
 
                 OutlinedTextField(
                     value = query,
                     onValueChange = { query = it },
                     placeholder = { Text("Search subjects, deliverables, notes...") },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(Dimens.iconMedium)) },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(Dimens.radiusMedium),
                     singleLine = true
                 )
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(Dimens.spaceMedium))
 
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(280.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(Dimens.spaceSmall)
                 ) {
                     if (query.isBlank()) {
                         item {
@@ -267,7 +289,7 @@ fun GlobalSearchDialog(
                                 text = "Type course title, task name, or keywords to filter.",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(vertical = 12.dp)
+                                modifier = Modifier.padding(vertical = Dimens.spaceMedium)
                             )
                         }
                     } else if (matchedSubjects.isEmpty() && matchedTasks.isEmpty() && matchedNotes.isEmpty()) {
@@ -276,7 +298,7 @@ fun GlobalSearchDialog(
                                 text = "No records matching '$query'.",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(vertical = 12.dp)
+                                modifier = Modifier.padding(vertical = Dimens.spaceMedium)
                             )
                         }
                     }
@@ -290,7 +312,7 @@ fun GlobalSearchDialog(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable { onDismiss(); onSelectSubject(sub.id) },
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(Dimens.radiusChip),
                                 color = MaterialTheme.colorScheme.surfaceVariant
                             ) {
                                 Row(
@@ -298,8 +320,8 @@ fun GlobalSearchDialog(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(sub.code, style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = PrimaryForest)
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(sub.name, style = MaterialTheme.typography.bodyMedium)
+                                    Spacer(modifier = Modifier.width(Dimens.spaceSmall))
+                                    Text(sub.name, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 }
                             }
                         }
@@ -314,14 +336,14 @@ fun GlobalSearchDialog(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable { onDismiss(); onSelectTask(t.id) },
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(Dimens.radiusChip),
                                 color = MaterialTheme.colorScheme.surfaceVariant
                             ) {
                                 Row(
                                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(t.title, style = MaterialTheme.typography.bodyMedium)
+                                    Text(t.title, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 }
                             }
                         }

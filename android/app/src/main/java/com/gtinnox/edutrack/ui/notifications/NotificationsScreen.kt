@@ -11,18 +11,18 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.automirrored.filled.Assignment
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -34,16 +34,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.gtinnox.edutrack.data.repository.EduTrackRepository
+import com.gtinnox.edutrack.ui.components.AcademicEditorialHeader
 import com.gtinnox.edutrack.ui.components.AcademicEmptyState
 import com.gtinnox.edutrack.ui.components.OrganicCard
 import com.gtinnox.edutrack.ui.theme.DeepForest
+import com.gtinnox.edutrack.ui.theme.Dimens
 import com.gtinnox.edutrack.ui.theme.PrimaryForest
 import com.gtinnox.edutrack.ui.theme.SoftSage
 import com.gtinnox.edutrack.ui.theme.SoftSuccess
 import com.gtinnox.edutrack.ui.theme.SoftTerracotta
+import com.gtinnox.edutrack.ui.theme.adaptiveHorizontalPadding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -55,159 +58,139 @@ fun NotificationsScreen(
     modifier: Modifier = Modifier
 ) {
     val notifications by repository.allNotifications.collectAsState(initial = emptyList())
+    val horizontalPadding = adaptiveHorizontalPadding()
 
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 22.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.TopCenter
     ) {
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onNavigateBack) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "ACADEMIC DISPATCH",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            letterSpacing = 1.5.sp,
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = "Notification Center",
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "${notifications.count { !it.isRead }} Unread Academic Alerts",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                if (notifications.isNotEmpty()) {
-                    TextButton(
-                        onClick = {
-                            CoroutineScope(Dispatchers.IO).launch {
-                                repository.markAllNotificationsRead()
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .widthIn(max = Dimens.maxContentWidth)
+                .padding(horizontal = horizontalPadding),
+            verticalArrangement = Arrangement.spacedBy(Dimens.spaceMedium)
+        ) {
+            item {
+                AcademicEditorialHeader(
+                    title = "Notification Center",
+                    category = "Academic Dispatch",
+                    subtitle = "${notifications.count { !it.isRead }} Unread Academic Alerts",
+                    onBackClick = onNavigateBack,
+                    trailingAction = if (notifications.isNotEmpty()) {
+                        {
+                            TextButton(onClick = {
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    repository.markAllNotificationsRead()
+                                }
+                            }) {
+                                Text("Mark All Read", color = PrimaryForest, fontWeight = FontWeight.Bold)
                             }
                         }
-                    ) {
-                        Text("Mark Read", color = PrimaryForest, fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
-        }
-
-        if (notifications.isEmpty()) {
-            item {
-                AcademicEmptyState(
-                    icon = Icons.Default.Notifications,
-                    title = "All Caught Up!",
-                    description = "No pending exam reminders or assignment deadlines."
+                    } else null
                 )
             }
-        } else {
-            items(notifications) { notif ->
-                val icon = when (notif.type) {
-                    "exam" -> Icons.Default.School
-                    "assignment" -> Icons.Default.Assignment
-                    "streak" -> Icons.Default.TrendingUp
-                    else -> Icons.Default.Timer
-                }
-                val iconColor = when (notif.type) {
-                    "exam" -> DeepForest
-                    "assignment" -> SoftTerracotta
-                    "streak" -> SoftSuccess
-                    else -> PrimaryForest
-                }
 
-                OrganicCard(
-                    cornerRadius = 20.dp,
-                    contentPadding = 16.dp,
-                    onClick = {
-                        CoroutineScope(Dispatchers.IO).launch {
-                            repository.markNotificationRead(notif.id)
-                        }
+            if (notifications.isEmpty()) {
+                item {
+                    AcademicEmptyState(
+                        icon = Icons.Default.Notifications,
+                        title = "No Academic Alerts",
+                        description = "You're completely up to date with examinations, scheduled lectures, and assignment deadlines."
+                    )
+                }
+            } else {
+                items(notifications) { notif ->
+                    val (iconVector, iconBg, iconColor) = when (notif.type) {
+                        "exam_countdown" -> Triple(Icons.Default.School, SoftTerracotta, DeepForest)
+                        "task_due" -> Triple(Icons.AutoMirrored.Filled.Assignment, SoftSage, PrimaryForest)
+                        "streak" -> Triple(Icons.AutoMirrored.Filled.TrendingUp, SoftSage, SoftSuccess)
+                        else -> Triple(Icons.Default.Timer, SoftSage, PrimaryForest)
                     }
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Surface(
-                            shape = CircleShape,
-                            color = SoftSage.copy(alpha = 0.7f),
-                            modifier = Modifier.size(44.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = icon,
-                                    contentDescription = null,
-                                    tint = iconColor,
-                                    modifier = Modifier.size(20.dp)
-                                )
+
+                    OrganicCard(
+                        cornerRadius = Dimens.radiusMedium,
+                        contentPadding = Dimens.spaceStandard,
+                        onClick = {
+                            CoroutineScope(Dispatchers.IO).launch {
+                                repository.markNotificationRead(notif.id)
                             }
                         }
-
-                        Spacer(modifier = Modifier.width(14.dp))
-
-                        Column(modifier = Modifier.weight(1f)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = iconBg,
+                                modifier = Modifier.size(44.dp)
                             ) {
-                                Text(
-                                    text = notif.title,
-                                    style = MaterialTheme.typography.titleMedium.copy(
-                                        fontWeight = if (!notif.isRead) FontWeight.Bold else FontWeight.Medium
-                                    ),
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                if (!notif.isRead) {
-                                    Surface(
-                                        shape = CircleShape,
-                                        color = PrimaryForest,
-                                        modifier = Modifier.size(8.dp)
-                                    ) {}
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = iconVector,
+                                        contentDescription = null,
+                                        tint = iconColor,
+                                        modifier = Modifier.size(Dimens.iconMedium)
+                                    )
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(2.dp))
+                            Spacer(modifier = Modifier.width(Dimens.spaceMedium))
 
-                            Text(
-                                text = notif.message,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = notif.title,
+                                        style = MaterialTheme.typography.titleMedium.copy(
+                                            fontWeight = if (notif.isRead) FontWeight.Medium else FontWeight.Bold
+                                        ),
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.weight(1f, fill = false)
+                                    )
 
-                            Spacer(modifier = Modifier.height(4.dp))
+                                    if (!notif.isRead) {
+                                        Spacer(modifier = Modifier.width(Dimens.spaceSmall))
+                                        Surface(
+                                            shape = CircleShape,
+                                            color = PrimaryForest,
+                                            modifier = Modifier.size(8.dp)
+                                        ) {}
+                                    }
+                                }
 
-                            Text(
-                                text = notif.timestamp.take(16).replace("T", " "),
-                                style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
-                            )
+                                Spacer(modifier = Modifier.height(2.dp))
+
+                                Text(
+                                    text = notif.message,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+
+                                Spacer(modifier = Modifier.height(4.dp))
+
+                                Text(
+                                    text = notif.timestamp,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
                 }
             }
-        }
 
-        item {
-            Spacer(modifier = Modifier.height(28.dp))
+            item {
+                Spacer(modifier = Modifier.height(36.dp))
+            }
         }
     }
 }

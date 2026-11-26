@@ -2,6 +2,7 @@ package com.gtinnox.edutrack.ui.sessions
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,20 +10,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -46,11 +44,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.gtinnox.edutrack.ui.components.AcademicEditorialHeader
 import com.gtinnox.edutrack.ui.components.OrganicCard
+import com.gtinnox.edutrack.ui.theme.Dimens
 import com.gtinnox.edutrack.ui.theme.PrimaryForest
 import com.gtinnox.edutrack.ui.theme.SoftSage
 import com.gtinnox.edutrack.ui.theme.SoftSuccess
+import com.gtinnox.edutrack.ui.theme.adaptiveHorizontalPadding
 import com.gtinnox.edutrack.ui.viewmodel.SessionUiEvent
 import com.gtinnox.edutrack.ui.viewmodel.SessionViewModel
 import com.gtinnox.edutrack.ui.viewmodel.SubjectViewModel
@@ -67,6 +67,7 @@ fun AddEditSessionScreen(
 ) {
     val subjects by subjectViewModel.allSubjects.collectAsState()
     val allSessions by sessionViewModel.allSessionsWithSubject.collectAsState()
+    val horizontalPadding = adaptiveHorizontalPadding()
 
     val existing = remember(sessionId, allSessions) {
         allSessions.find { it.session.id == sessionId }?.session
@@ -107,243 +108,224 @@ fun AddEditSessionScreen(
         containerColor = Color.Transparent,
         modifier = modifier
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 22.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(padding),
+            contentAlignment = Alignment.TopCenter
         ) {
-            // Header directly on background
-            Row(
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxSize()
+                    .widthIn(max = Dimens.maxContentWidth)
+                    .padding(horizontal = horizontalPadding)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(Dimens.spaceStandard)
             ) {
-                IconButton(onClick = onNavigateBack) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "FOCUS RECORD LOG",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            letterSpacing = 1.5.sp,
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = if (existing != null) "Edit Study Session" else "Log Study Session",
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
-
-            // Subject Selector Card
-            OrganicCard(
-                cornerRadius = 24.dp,
-                contentPadding = 20.dp
-            ) {
-                Text(
-                    text = "Associated Course",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(subjects) { sub ->
-                        val isSelected = selectedSubjectId == sub.id
-                        FilterChip(
-                            selected = isSelected,
-                            onClick = { selectedSubjectId = sub.id },
-                            label = { Text(sub.name) },
-                            shape = RoundedCornerShape(12.dp),
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = SoftSage,
-                                selectedLabelColor = PrimaryForest
-                            )
-                        )
-                    }
-                }
-            }
-
-            // Duration & Type Card
-            OrganicCard(
-                cornerRadius = 24.dp,
-                contentPadding = 20.dp
-            ) {
-                Text(
-                    text = "Study Duration & Mode",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-
-                OutlinedTextField(
-                    value = durationText,
-                    onValueChange = { durationText = it },
-                    label = { Text("Duration (Minutes) *") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PrimaryForest,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                    )
+                // Header directly on background
+                AcademicEditorialHeader(
+                    title = if (existing != null) "Edit Study Session" else "Log Study Session",
+                    category = "Focus Record Log",
+                    onBackClick = onNavigateBack
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Quick duration pills
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    items(quickDurations) { d ->
-                        val isCurrent = durationText == d.toString()
-                        Surface(
-                            shape = RoundedCornerShape(10.dp),
-                            color = if (isCurrent) SoftSage else MaterialTheme.colorScheme.surfaceVariant,
-                            modifier = Modifier.clickable { durationText = d.toString() }
-                        ) {
-                            Text(
-                                text = "${d}m",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (isCurrent) PrimaryForest else MaterialTheme.colorScheme.onSurfaceVariant
-                                ),
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = "Activity Classification",
-                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    sessionTypes.forEach { (typeKey, typeLabel) ->
-                        val isSelected = sessionType == typeKey
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = if (isSelected) SoftSage else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { sessionType = typeKey }
-                        ) {
-                            Text(
-                                text = typeLabel,
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (isSelected) PrimaryForest else MaterialTheme.colorScheme.onSurface
-                                ),
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
-                            )
-                        }
-                    }
-                }
-            }
-
-            // Focus Quality Score
-            OrganicCard(
-                cornerRadius = 24.dp,
-                contentPadding = 20.dp
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                // Subject Selector Card
+                OrganicCard(
+                    cornerRadius = Dimens.radiusLarge,
+                    contentPadding = Dimens.spaceLarge
                 ) {
                     Text(
-                        text = "Focus Score",
+                        text = "Associated Course",
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onSurface
                     )
+                    Spacer(modifier = Modifier.height(Dimens.spaceSmall))
+
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(Dimens.spaceSmall)) {
+                        items(subjects) { sub ->
+                            val isSelected = selectedSubjectId == sub.id
+                            FilterChip(
+                                selected = isSelected,
+                                onClick = { selectedSubjectId = sub.id },
+                                label = { Text(sub.name) },
+                                shape = RoundedCornerShape(Dimens.radiusChip),
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = SoftSage,
+                                    selectedLabelColor = PrimaryForest
+                                )
+                            )
+                        }
+                    }
+                }
+
+                // Duration & Type Card
+                OrganicCard(
+                    cornerRadius = Dimens.radiusLarge,
+                    contentPadding = Dimens.spaceLarge
+                ) {
                     Text(
-                        text = "${focusScore.toInt()}%",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = SoftSuccess
+                        text = "Study Duration & Mode",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(Dimens.spaceMedium))
+
+                    OutlinedTextField(
+                        value = durationText,
+                        onValueChange = { durationText = it },
+                        label = { Text("Duration (Minutes) *") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(Dimens.radiusMedium),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = PrimaryForest,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(Dimens.spaceSmall))
+
+                    // Quick duration pills
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        items(quickDurations) { d ->
+                            val isCurrent = durationText == d.toString()
+                            Surface(
+                                shape = RoundedCornerShape(Dimens.radiusChip),
+                                color = if (isCurrent) SoftSage else MaterialTheme.colorScheme.surfaceVariant,
+                                modifier = Modifier.clickable { durationText = d.toString() }
+                            ) {
+                                Text(
+                                    text = "${d}m",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isCurrent) PrimaryForest else MaterialTheme.colorScheme.onSurfaceVariant
+                                    ),
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(Dimens.spaceStandard))
+
+                    Text(
+                        text = "Activity Classification",
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(Dimens.spaceSmall))
+
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        sessionTypes.forEach { (typeKey, typeLabel) ->
+                            val isSelected = sessionType == typeKey
+                            Surface(
+                                shape = RoundedCornerShape(Dimens.radiusSmall),
+                                color = if (isSelected) SoftSage else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { sessionType = typeKey }
+                            ) {
+                                Text(
+                                    text = typeLabel,
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (isSelected) PrimaryForest else MaterialTheme.colorScheme.onSurface
+                                    ),
+                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Focus Quality Slider Card
+                OrganicCard(
+                    cornerRadius = Dimens.radiusLarge,
+                    contentPadding = Dimens.spaceLarge
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Focus Quality Score",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "${focusScore.toInt()}%",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = SoftSuccess
+                            )
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(Dimens.spaceSmall))
+
+                    Slider(
+                        value = focusScore,
+                        onValueChange = { focusScore = it },
+                        valueRange = 0f..100f,
+                        colors = SliderDefaults.colors(
+                            thumbColor = PrimaryForest,
+                            activeTrackColor = PrimaryForest
                         )
                     )
                 }
 
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Slider(
-                    value = focusScore,
-                    onValueChange = { focusScore = it },
-                    valueRange = 0f..100f,
-                    colors = SliderDefaults.colors(
-                        thumbColor = PrimaryForest,
-                        activeTrackColor = PrimaryForest,
-                        inactiveTrackColor = SoftSage
+                // Reflection Notes Card
+                OrganicCard(
+                    cornerRadius = Dimens.radiusLarge,
+                    contentPadding = Dimens.spaceLarge
+                ) {
+                    Text(
+                        text = "Session Reflection & Notes",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface
                     )
-                )
-            }
+                    Spacer(modifier = Modifier.height(Dimens.spaceMedium))
 
-            // Reflection Notes
-            OrganicCard(
-                cornerRadius = 24.dp,
-                contentPadding = 20.dp
-            ) {
-                Text(
-                    text = "Session Reflection & Completed Work",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-
-                OutlinedTextField(
-                    value = notes,
-                    onValueChange = { notes = it },
-                    placeholder = { Text("Summary of pages read, problems solved, or derivations proved...") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PrimaryForest,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                    ),
-                    minLines = 3
-                )
-            }
-
-            // Save Action
-            Button(
-                onClick = {
-                    sessionViewModel.saveSession(
-                        id = sessionId,
-                        subjectId = selectedSubjectId,
-                        durationMinutes = durationText.toIntOrNull() ?: 45,
-                        sessionType = sessionType,
-                        notes = notes,
-                        focusScore = focusScore.toInt()
+                    OutlinedTextField(
+                        value = notes,
+                        onValueChange = { notes = it },
+                        placeholder = { Text("What did you accomplish? Any theorems or concepts reviewed?") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(Dimens.radiusMedium),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = PrimaryForest,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        ),
+                        minLines = 3,
+                        maxLines = 6
                     )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(18.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryForest),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
-            ) {
-                Text(
-                    text = if (existing != null) "Update Session Record" else "Log Study Session",
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
-                )
-            }
+                }
 
-            Spacer(modifier = Modifier.height(28.dp))
+                Button(
+                    onClick = {
+                        val mins = durationText.toIntOrNull() ?: 45
+                        sessionViewModel.saveSession(
+                            id = existing?.id,
+                            subjectId = selectedSubjectId,
+                            durationMinutes = mins,
+                            sessionType = sessionType,
+                            notes = notes,
+                            focusScore = focusScore.toInt()
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth().height(Dimens.buttonHeight),
+                    shape = RoundedCornerShape(Dimens.radiusMedium),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryForest),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
+                ) {
+                    Text(
+                        text = if (existing != null) "Update Session" else "Save Study Block",
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(36.dp))
+            }
         }
     }
 }

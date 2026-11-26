@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -52,15 +53,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.gtinnox.edutrack.ui.components.AcademicEditorialHeader
 import com.gtinnox.edutrack.ui.components.AcademicEmptyState
 import com.gtinnox.edutrack.ui.components.OrganicCard
 import com.gtinnox.edutrack.ui.components.SubjectChip
+import com.gtinnox.edutrack.ui.theme.Dimens
 import com.gtinnox.edutrack.ui.theme.PrimaryForest
 import com.gtinnox.edutrack.ui.theme.SoftDanger
 import com.gtinnox.edutrack.ui.theme.SoftSage
 import com.gtinnox.edutrack.ui.theme.SoftSuccess
+import com.gtinnox.edutrack.ui.theme.adaptiveHorizontalPadding
 import com.gtinnox.edutrack.ui.viewmodel.PlannerViewModel
 import kotlinx.coroutines.flow.collectLatest
 import java.time.LocalDate
@@ -80,6 +85,7 @@ fun PlannerScreen(
 
     var showAddDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
+    val horizontalPadding = adaptiveHorizontalPadding()
 
     LaunchedEffect(Unit) {
         viewModel.eventFlow.collectLatest { msg ->
@@ -107,14 +113,14 @@ fun PlannerScreen(
                 )
             },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.spaceMedium)) {
                     OutlinedTextField(
                         value = title,
                         onValueChange = { title = it },
                         label = { Text("Block Title *") },
                         placeholder = { Text("e.g. Distributed Systems Lecture") },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(Dimens.radiusMedium),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = PrimaryForest,
                             unfocusedBorderColor = MaterialTheme.colorScheme.outline
@@ -132,7 +138,7 @@ fun PlannerScreen(
                                 selected = subjectId == s.id,
                                 onClick = { subjectId = s.id },
                                 label = { Text(s.code.ifBlank { s.name }) },
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(Dimens.radiusChip),
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = SoftSage,
                                     selectedLabelColor = PrimaryForest
@@ -141,20 +147,20 @@ fun PlannerScreen(
                         }
                     }
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(Dimens.spaceSmall)) {
                         OutlinedTextField(
                             value = startTime,
                             onValueChange = { startTime = it },
                             label = { Text("Start") },
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(14.dp)
+                            shape = RoundedCornerShape(Dimens.radiusSmall)
                         )
                         OutlinedTextField(
                             value = endTime,
                             onValueChange = { endTime = it },
                             label = { Text("End") },
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(14.dp)
+                            shape = RoundedCornerShape(Dimens.radiusSmall)
                         )
                     }
 
@@ -164,7 +170,7 @@ fun PlannerScreen(
                         label = { Text("Location / Chapter") },
                         placeholder = { Text("Hall 402 / Review Lab") },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(14.dp)
+                        shape = RoundedCornerShape(Dimens.radiusMedium)
                     )
                 }
             },
@@ -183,7 +189,7 @@ fun PlannerScreen(
                             showAddDialog = false
                         }
                     },
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(Dimens.radiusMedium),
                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryForest)
                 ) {
                     Text("Schedule Block", fontWeight = FontWeight.Bold)
@@ -194,7 +200,7 @@ fun PlannerScreen(
                     Text("Cancel")
                 }
             },
-            shape = RoundedCornerShape(24.dp)
+            shape = RoundedCornerShape(Dimens.radiusLarge)
         )
     }
 
@@ -203,201 +209,192 @@ fun PlannerScreen(
         containerColor = Color.Transparent,
         modifier = modifier
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 22.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(padding),
+            contentAlignment = Alignment.TopCenter
         ) {
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // Header Row directly on background
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .widthIn(max = Dimens.maxContentWidth)
+                    .padding(horizontal = horizontalPadding),
+                verticalArrangement = Arrangement.spacedBy(Dimens.spaceStandard)
             ) {
-                Column {
-                    Text(
-                        text = "ACADEMIC TIMETABLE",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            letterSpacing = 2.sp,
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = selectedDate.format(DateTimeFormatter.ofPattern("EEEE, MMM d")),
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-
-                Button(
-                    onClick = { showAddDialog = true },
-                    shape = RoundedCornerShape(18.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryForest),
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Add Block", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
-                }
-            }
-
-            // Horizontal Date Strip (14 Days)
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                items(days) { date ->
-                    val isSelected = date == selectedDate
-                    val isToday = date == today
-
-                    Surface(
-                        modifier = Modifier
-                            .width(62.dp)
-                            .clickable { viewModel.setDate(date.toString()) },
-                        shape = RoundedCornerShape(20.dp),
-                        color = if (isSelected) PrimaryForest else MaterialTheme.colorScheme.surface,
-                        border = BorderStroke(
-                            1.dp,
-                            if (isSelected) PrimaryForest else MaterialTheme.colorScheme.outline
-                        )
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(vertical = 12.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                // Header Row directly on background
+                AcademicEditorialHeader(
+                    title = selectedDate.format(DateTimeFormatter.ofPattern("EEEE, MMM d")),
+                    category = "Academic Timetable",
+                    trailingAction = {
+                        Button(
+                            onClick = { showAddDialog = true },
+                            shape = RoundedCornerShape(Dimens.radiusMedium),
+                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryForest),
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
+                            modifier = Modifier.height(40.dp)
                         ) {
-                            Text(
-                                text = date.format(DateTimeFormatter.ofPattern("EEE")).uppercase(),
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 11.sp
-                                ),
-                                color = if (isSelected) Color.White.copy(alpha = 0.85f) else MaterialTheme.colorScheme.onSurfaceVariant
+                            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(Dimens.iconSmall))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Add Block", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
+                        }
+                    }
+                )
+
+                // Horizontal Date Strip (14 Days)
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.spaceSmall),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items(days) { date ->
+                        val isSelected = date == selectedDate
+                        val isToday = date == today
+
+                        Surface(
+                            modifier = Modifier
+                                .width(62.dp)
+                                .clickable { viewModel.setDate(date.toString()) },
+                            shape = RoundedCornerShape(Dimens.radiusMedium),
+                            color = if (isSelected) PrimaryForest else MaterialTheme.colorScheme.surface,
+                            border = BorderStroke(
+                                1.dp,
+                                if (isSelected) PrimaryForest else MaterialTheme.colorScheme.outline
                             )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = date.dayOfMonth.toString(),
-                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                                color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
-                            )
-                            if (isToday) {
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Box(
-                                    modifier = Modifier
-                                        .size(5.dp)
-                                        .background(
-                                            if (isSelected) Color.White else PrimaryForest,
-                                            CircleShape
-                                        )
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(vertical = 12.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = date.format(DateTimeFormatter.ofPattern("EEE")).uppercase(),
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 11.sp
+                                    ),
+                                    color = if (isSelected) Color.White.copy(alpha = 0.85f) else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = date.dayOfMonth.toString(),
+                                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                    color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
+                                )
+                                if (isToday) {
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Box(
+                                        modifier = Modifier
+                                            .size(5.dp)
+                                            .background(
+                                                if (isSelected) Color.White else PrimaryForest,
+                                                CircleShape
+                                            )
+                                    )
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            // Schedule Timeline Blocks
-            if (events.isEmpty()) {
-                AcademicEmptyState(
-                    icon = Icons.Default.CalendarMonth,
-                    title = "No Scheduled Blocks",
-                    description = "Nothing scheduled for ${selectedDate.format(DateTimeFormatter.ofPattern("MMM d"))}. Add a lecture, seminar, or study slot.",
-                    actionText = "Schedule Event",
-                    onActionClick = { showAddDialog = true }
-                )
-            } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    items(events) { event ->
-                        val sub = subjects.find { it.id == event.subjectId }
-                        val isDone = event.isCompleted
+                // Schedule Timeline Blocks
+                if (events.isEmpty()) {
+                    AcademicEmptyState(
+                        icon = Icons.Default.CalendarMonth,
+                        title = "No Scheduled Blocks",
+                        description = "Nothing scheduled for ${selectedDate.format(DateTimeFormatter.ofPattern("MMM d"))}. Add a lecture, seminar, or study slot.",
+                        actionText = "Schedule Event",
+                        onActionClick = { showAddDialog = true }
+                    )
+                } else {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(Dimens.spaceMedium),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        items(events) { event ->
+                            val sub = subjects.find { it.id == event.subjectId }
+                            val isDone = event.isCompleted
 
-                        OrganicCard(
-                            cornerRadius = 20.dp,
-                            contentPadding = 16.dp
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
+                            OrganicCard(
+                                cornerRadius = Dimens.radiusMedium,
+                                contentPadding = Dimens.spaceStandard
                             ) {
-                                // Toggle status
-                                IconButton(
-                                    onClick = { viewModel.toggleEvent(event) },
-                                    modifier = Modifier.size(28.dp)
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
+                                    // Complete / Incomplete Checkbox
                                     Icon(
                                         imageVector = if (isDone) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
-                                        contentDescription = "Toggle",
-                                        tint = if (isDone) SoftSuccess else MaterialTheme.colorScheme.onSurfaceVariant
+                                        contentDescription = "Toggle Complete",
+                                        tint = if (isDone) SoftSuccess else MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier
+                                            .size(Dimens.iconStandard)
+                                            .clickable { viewModel.toggleEvent(event) }
                                     )
-                                }
 
-                                Spacer(modifier = Modifier.width(12.dp))
+                                    Spacer(modifier = Modifier.width(Dimens.spaceMedium))
 
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Surface(
-                                            shape = RoundedCornerShape(8.dp),
-                                            color = SoftSage.copy(alpha = 0.6f)
-                                        ) {
+                                    // Time Indicator
+                                    Column(modifier = Modifier.width(76.dp)) {
+                                        Text(
+                                            text = event.startTime,
+                                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                            color = if (isDone) MaterialTheme.colorScheme.onSurfaceVariant else PrimaryForest
+                                        )
+                                        Text(
+                                            text = event.endTime,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.width(Dimens.spaceSmall))
+
+                                    // Content Details
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = event.title,
+                                            style = MaterialTheme.typography.titleMedium.copy(
+                                                fontWeight = FontWeight.Bold
+                                            ),
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+
+                                        if (event.description.isNotBlank()) {
                                             Text(
-                                                text = "${event.startTime} - ${event.endTime}",
-                                                style = MaterialTheme.typography.labelSmall.copy(
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = PrimaryForest
-                                                ),
-                                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                                                text = event.description,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
                                             )
                                         }
 
                                         if (sub != null) {
-                                            Spacer(modifier = Modifier.width(8.dp))
-                                            SubjectChip(
-                                                name = sub.name.take(14),
-                                                code = sub.code,
-                                                colorHex = sub.color
-                                            )
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            SubjectChip(name = sub.name, colorHex = sub.color, code = sub.code)
                                         }
                                     }
 
-                                    Spacer(modifier = Modifier.height(6.dp))
-                                    Text(
-                                        text = event.title,
-                                        style = MaterialTheme.typography.titleMedium.copy(
-                                            fontWeight = FontWeight.Bold
-                                        ),
-                                        color = if (isDone) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
-                                    )
-
-                                    if (event.description.isNotBlank()) {
-                                        Spacer(modifier = Modifier.height(2.dp))
-                                        Text(
-                                            text = event.description,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    // Delete Action
+                                    IconButton(
+                                        onClick = { viewModel.deleteEvent(event) },
+                                        modifier = Modifier.size(32.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = "Delete Event",
+                                            tint = SoftDanger.copy(alpha = 0.7f),
+                                            modifier = Modifier.size(18.dp)
                                         )
                                     }
                                 }
-
-                                IconButton(
-                                    onClick = { viewModel.deleteEvent(event) },
-                                    modifier = Modifier.size(28.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Delete,
-                                        contentDescription = "Delete",
-                                        tint = SoftDanger.copy(alpha = 0.8f),
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
                             }
+                        }
+
+                        item {
+                            Spacer(modifier = Modifier.height(84.dp))
                         }
                     }
                 }

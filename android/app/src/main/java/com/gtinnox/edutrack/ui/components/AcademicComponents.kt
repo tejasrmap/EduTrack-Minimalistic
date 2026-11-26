@@ -28,7 +28,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,10 +39,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gtinnox.edutrack.ui.theme.DeepForest
+import com.gtinnox.edutrack.ui.theme.Dimens
 import com.gtinnox.edutrack.ui.theme.MutedSage
 import com.gtinnox.edutrack.ui.theme.PrimaryForest
 import com.gtinnox.edutrack.ui.theme.SoftBorder
@@ -52,8 +53,6 @@ import com.gtinnox.edutrack.ui.theme.SoftSage
 import com.gtinnox.edutrack.ui.theme.SoftSuccess
 import com.gtinnox.edutrack.ui.theme.SoftTerracotta
 import com.gtinnox.edutrack.ui.theme.SoftWarning
-import com.gtinnox.edutrack.ui.theme.TextPrimary
-import com.gtinnox.edutrack.ui.theme.TextSecondary
 import com.gtinnox.edutrack.ui.theme.WhiteSurface
 
 // ==========================================
@@ -64,9 +63,9 @@ fun OrganicCard(
     modifier: Modifier = Modifier,
     backgroundColor: Color = MaterialTheme.colorScheme.surface,
     borderColor: Color = MaterialTheme.colorScheme.outline,
-    shapeRadius: Dp = 24.dp,
+    shapeRadius: Dp = Dimens.radiusLarge,
     cornerRadius: Dp = shapeRadius,
-    contentPadding: Dp = 20.dp,
+    contentPadding: Dp = Dimens.spaceLarge,
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
@@ -110,8 +109,8 @@ fun PremiumCard(
     modifier: Modifier = Modifier,
     backgroundColor: Color = MaterialTheme.colorScheme.surface,
     borderColor: Color = MaterialTheme.colorScheme.outline,
-    shapeRadius: Dp = 24.dp,
-    contentPadding: Dp = 20.dp,
+    shapeRadius: Dp = Dimens.radiusLarge,
+    contentPadding: Dp = Dimens.spaceLarge,
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
@@ -145,6 +144,7 @@ fun AcademicCard(
 
 // ==========================================
 // 2. Soft Sage Focus Summary (Calm, Single Surface)
+// Proportional Height, Aligned Streak & Progress
 // ==========================================
 @Composable
 fun SoftSageFocusSummary(
@@ -165,12 +165,12 @@ fun SoftSageFocusSummary(
 
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(30.dp),
+        shape = RoundedCornerShape(Dimens.radiusXLarge),
         color = SoftSage,
         border = BorderStroke(1.dp, SoftBorder)
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 24.dp, vertical = 22.dp)
+            modifier = Modifier.padding(horizontal = Dimens.spaceLarge, vertical = Dimens.spaceLarge)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -185,7 +185,7 @@ fun SoftSageFocusSummary(
 
                 if (streakDays > 0) {
                     Surface(
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(Dimens.radiusChip),
                         color = WhiteSurface.copy(alpha = 0.7f)
                     ) {
                         Text(
@@ -198,7 +198,7 @@ fun SoftSageFocusSummary(
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(Dimens.spaceMedium))
 
             val hours = todayMinutes / 60
             val mins = todayMinutes % 60
@@ -222,13 +222,13 @@ fun SoftSageFocusSummary(
                     text = "${(animatedProgress * 100).toInt()}% of ${(targetMinutes / 60)}h goal",
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
                     color = PrimaryForest.copy(alpha = 0.85f),
-                    modifier = Modifier.padding(bottom = 6.dp)
+                    modifier = Modifier.padding(bottom = 4.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(Dimens.spaceMedium))
 
-            // Gentle organic progress bar
+            // Gentle organic progress bar spanning 100% of internal width
             LinearProgressIndicator(
                 progress = { animatedProgress },
                 modifier = Modifier
@@ -239,15 +239,15 @@ fun SoftSageFocusSummary(
                 trackColor = WhiteSurface.copy(alpha = 0.5f)
             )
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(Dimens.spaceStandard))
 
-            // Calm Forest Green Action Button
+            // Calm Forest Green Action Button with 48dp touch height
             Button(
                 onClick = onStartFocus,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp),
-                shape = RoundedCornerShape(18.dp),
+                    .height(Dimens.buttonHeight),
+                shape = RoundedCornerShape(Dimens.radiusMedium),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = PrimaryForest,
                     contentColor = Color.White
@@ -260,9 +260,9 @@ fun SoftSageFocusSummary(
                     Icon(
                         imageVector = Icons.Default.PlayArrow,
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(Dimens.iconMedium)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(Dimens.spaceSmall))
                     Text(
                         text = "Start Focus",
                         style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold)
@@ -293,6 +293,7 @@ fun GradientHeroCard(
 
 // ==========================================
 // 3. Section Title (Sitting Directly on Background)
+// Vertical Center Aligned
 // ==========================================
 @Composable
 fun SectionHeader(
@@ -305,7 +306,7 @@ fun SectionHeader(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 8.dp, bottom = 4.dp),
+            .padding(top = Dimens.spaceSmall, bottom = Dimens.spaceXSmall),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -316,7 +317,7 @@ fun SectionHeader(
                 color = MaterialTheme.colorScheme.onBackground
             )
             if (badgeText != null) {
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(Dimens.spaceSmall))
                 Text(
                     text = "($badgeText)",
                     style = MaterialTheme.typography.bodySmall,
@@ -335,7 +336,7 @@ fun SectionHeader(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
                     .clickable { onActionClick() }
-                    .padding(horizontal = 4.dp, vertical = 2.dp)
+                    .padding(horizontal = 6.dp, vertical = 4.dp)
             )
         }
     }
@@ -343,6 +344,7 @@ fun SectionHeader(
 
 // ==========================================
 // 4. Clean Subject Row (Minimalist Library Composition)
+// Aligned Icon, Text Overflow Handling, Equal Minimum Height
 // ==========================================
 @Composable
 fun SubjectCleanRow(
@@ -368,18 +370,18 @@ fun SubjectCleanRow(
         modifier = modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(Dimens.radiusMedium),
         color = MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 18.dp, vertical = 14.dp),
+            modifier = Modifier.padding(horizontal = Dimens.spaceStandard, vertical = Dimens.spaceMedium),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Soft Circular Identity
             Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(Dimens.iconButtonSize)
                     .background(subColor.copy(alpha = 0.15f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
@@ -392,21 +394,27 @@ fun SubjectCleanRow(
                 )
             }
 
-            Spacer(modifier = Modifier.width(14.dp))
+            Spacer(modifier = Modifier.width(Dimens.spaceMedium))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = name,
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = "${code.ifBlank { "COURSE" }} · ${weeklyMins / 60}h ${weeklyMins % 60}m studied",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
+
+            Spacer(modifier = Modifier.width(Dimens.spaceSmall))
 
             // Compact Progress indicator
             Box(
@@ -445,7 +453,7 @@ fun SubjectChip(
 
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(Dimens.radiusChip),
         color = chipColor.copy(alpha = 0.12f)
     ) {
         Row(
@@ -463,7 +471,9 @@ fun SubjectChip(
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontWeight = FontWeight.Medium,
                     color = chipColor
-                )
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
@@ -486,14 +496,14 @@ fun StatusChip(
 
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(10.dp),
+        shape = RoundedCornerShape(Dimens.radiusChip),
         color = bg
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
             color = textColor,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
         )
     }
 }
@@ -511,14 +521,14 @@ fun PriorityChip(
 
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(10.dp),
+        shape = RoundedCornerShape(Dimens.radiusChip),
         color = bg
     ) {
         Text(
             text = priority.replaceFirstChar { it.uppercase() },
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
             color = textColor,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
         )
     }
 }
@@ -538,13 +548,13 @@ fun MetricCard(
 ) {
     OrganicCard(
         modifier = modifier,
-        shapeRadius = 20.dp,
-        contentPadding = 16.dp
+        shapeRadius = Dimens.radiusMedium,
+        contentPadding = Dimens.spaceStandard
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier
-                    .size(36.dp)
+                    .size(Dimens.iconButtonSize)
                     .background(iconTint.copy(alpha = 0.12f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
@@ -552,21 +562,30 @@ fun MetricCard(
                     imageVector = icon,
                     contentDescription = null,
                     tint = iconTint,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(Dimens.iconMedium)
                 )
             }
-            Spacer(modifier = Modifier.width(10.dp))
+            Spacer(modifier = Modifier.width(Dimens.spaceMedium))
             Column {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = value,
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface
                 )
+                if (comparison != null) {
+                    Text(
+                        text = comparison,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = PrimaryForest
+                    )
+                }
             }
         }
     }
@@ -587,7 +606,7 @@ fun AcademicEmptyState(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 36.dp, horizontal = 24.dp),
+            .padding(vertical = 36.dp, horizontal = Dimens.spaceLarge),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Surface(
@@ -604,7 +623,7 @@ fun AcademicEmptyState(
                 )
             }
         }
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(Dimens.spaceStandard))
         Text(
             text = title,
             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
@@ -619,10 +638,10 @@ fun AcademicEmptyState(
             textAlign = TextAlign.Center
         )
         if (actionText != null && onActionClick != null) {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(Dimens.spaceStandard))
             Button(
                 onClick = onActionClick,
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(Dimens.radiusMedium),
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryForest)
             ) {
                 Text(actionText, style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold))

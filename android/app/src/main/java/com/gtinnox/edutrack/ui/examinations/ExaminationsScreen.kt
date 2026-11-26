@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -46,16 +47,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.gtinnox.edutrack.ui.components.AcademicEditorialHeader
 import com.gtinnox.edutrack.ui.components.AcademicEmptyState
 import com.gtinnox.edutrack.ui.components.OrganicCard
 import com.gtinnox.edutrack.ui.components.SubjectChip
+import com.gtinnox.edutrack.ui.theme.Dimens
 import com.gtinnox.edutrack.ui.theme.PrimaryForest
 import com.gtinnox.edutrack.ui.theme.SoftDanger
 import com.gtinnox.edutrack.ui.theme.SoftSage
 import com.gtinnox.edutrack.ui.theme.SoftSuccess
 import com.gtinnox.edutrack.ui.theme.SoftTerracotta
+import com.gtinnox.edutrack.ui.theme.adaptiveHorizontalPadding
 import com.gtinnox.edutrack.ui.viewmodel.ExamViewModel
 import kotlinx.coroutines.flow.collectLatest
 import java.time.LocalDate
@@ -70,6 +74,7 @@ fun ExaminationsScreen(
 
     var showAddDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
+    val horizontalPadding = adaptiveHorizontalPadding()
 
     LaunchedEffect(Unit) {
         viewModel.eventFlow.collectLatest { msg ->
@@ -95,28 +100,28 @@ fun ExaminationsScreen(
                 )
             },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.spaceMedium)) {
                     OutlinedTextField(
                         value = title,
                         onValueChange = { title = it },
-                        label = { Text("Exam Name *") },
-                        placeholder = { Text("e.g. Distributed Systems Midterm") },
+                        label = { Text("Exam Title *") },
+                        placeholder = { Text("e.g. Midterm Examination") },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(Dimens.radiusMedium),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = PrimaryForest,
                             unfocusedBorderColor = MaterialTheme.colorScheme.outline
                         )
                     )
 
-                    Text("Subject *", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                    Text("Course *", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         items(subjects) { s ->
                             FilterChip(
                                 selected = subjectId == s.id,
                                 onClick = { subjectId = s.id },
                                 label = { Text(s.code.ifBlank { s.name }) },
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(Dimens.radiusChip),
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = SoftSage,
                                     selectedLabelColor = PrimaryForest
@@ -125,46 +130,46 @@ fun ExaminationsScreen(
                         }
                     }
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(Dimens.spaceSmall)) {
                         OutlinedTextField(
                             value = examDate,
                             onValueChange = { examDate = it },
                             label = { Text("Date (YYYY-MM-DD)") },
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(14.dp)
+                            modifier = Modifier.weight(1.2f),
+                            shape = RoundedCornerShape(Dimens.radiusSmall)
                         )
                         OutlinedTextField(
                             value = examTime,
                             onValueChange = { examTime = it },
                             label = { Text("Time") },
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(14.dp)
+                            modifier = Modifier.weight(0.8f),
+                            shape = RoundedCornerShape(Dimens.radiusSmall)
                         )
                     }
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(Dimens.spaceSmall)) {
                         OutlinedTextField(
                             value = location,
                             onValueChange = { location = it },
                             label = { Text("Hall / Room") },
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(14.dp)
+                            shape = RoundedCornerShape(Dimens.radiusSmall)
                         )
                         OutlinedTextField(
                             value = targetGrade,
                             onValueChange = { targetGrade = it },
-                            label = { Text("Target Grade") },
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(14.dp)
+                            label = { Text("Goal Grade") },
+                            modifier = Modifier.weight(0.6f),
+                            shape = RoundedCornerShape(Dimens.radiusSmall)
                         )
                     }
 
                     OutlinedTextField(
                         value = notes,
                         onValueChange = { notes = it },
-                        label = { Text("Exam Scope / Topics") },
+                        label = { Text("Allowed materials / formulas") },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(Dimens.radiusSmall),
                         minLines = 2
                     )
                 }
@@ -175,8 +180,8 @@ fun ExaminationsScreen(
                         if (title.isNotBlank()) {
                             viewModel.saveExam(
                                 id = null,
-                                title = title,
                                 subjectId = subjectId,
+                                title = title,
                                 examDate = examDate,
                                 examTime = examTime,
                                 location = location,
@@ -186,7 +191,7 @@ fun ExaminationsScreen(
                             showAddDialog = false
                         }
                     },
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(Dimens.radiusMedium),
                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryForest)
                 ) {
                     Text("Register Exam", fontWeight = FontWeight.Bold)
@@ -197,7 +202,7 @@ fun ExaminationsScreen(
                     Text("Cancel")
                 }
             },
-            shape = RoundedCornerShape(24.dp)
+            shape = RoundedCornerShape(Dimens.radiusLarge)
         )
     }
 
@@ -206,160 +211,153 @@ fun ExaminationsScreen(
         containerColor = Color.Transparent,
         modifier = modifier
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 22.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(padding),
+            contentAlignment = Alignment.TopCenter
         ) {
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // Header directly on background
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .widthIn(max = Dimens.maxContentWidth)
+                    .padding(horizontal = horizontalPadding),
+                verticalArrangement = Arrangement.spacedBy(Dimens.spaceStandard)
             ) {
-                Column {
-                    Text(
-                        text = "ACADEMIC ASSESSMENTS",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            letterSpacing = 2.sp,
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Examinations",
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-
-                Button(
-                    onClick = { showAddDialog = true },
-                    shape = RoundedCornerShape(18.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryForest),
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Register Exam", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
-                }
-            }
-
-            if (examsWithCountdown.isEmpty()) {
-                AcademicEmptyState(
-                    icon = Icons.Default.School,
-                    title = "No Examinations Scheduled",
-                    description = "No midterms or final assessments are currently registered.",
-                    actionText = "Register Examination",
-                    onActionClick = { showAddDialog = true }
-                )
-            } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    items(examsWithCountdown) { examItem ->
-                        val exam = examItem.exam
-                        val daysRemaining = examItem.daysRemaining
-                        val sub = subjects.find { it.id == exam.subjectId }
-
-                        val isUrgent = daysRemaining <= 3
-
-                        OrganicCard(
-                            cornerRadius = 22.dp,
-                            contentPadding = 18.dp
+                // Header directly on background
+                AcademicEditorialHeader(
+                    title = "Examinations",
+                    category = "Assessment Schedule",
+                    trailingAction = {
+                        Button(
+                            onClick = { showAddDialog = true },
+                            shape = RoundedCornerShape(Dimens.radiusMedium),
+                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryForest),
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
+                            modifier = Modifier.height(40.dp)
                         ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
+                            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(Dimens.iconSmall))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("New Exam", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
+                        }
+                    }
+                )
+
+                if (examsWithCountdown.isEmpty()) {
+                    AcademicEmptyState(
+                        icon = Icons.Default.School,
+                        title = "No Registered Assessments",
+                        description = "No examination dates scheduled yet. Stay organized by adding midterms and finals.",
+                        actionText = "Add Examination",
+                        onActionClick = { showAddDialog = true }
+                    )
+                } else {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(Dimens.spaceMedium),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        items(examsWithCountdown) { examItem ->
+                            val exam = examItem.exam
+                            val sub = subjects.find { it.id == exam.subjectId }
+                            val daysLeft = examItem.daysRemaining
+
+                            OrganicCard(
+                                cornerRadius = Dimens.radiusMedium,
+                                contentPadding = Dimens.spaceStandard
                             ) {
-                                Surface(
-                                    shape = RoundedCornerShape(16.dp),
-                                    color = if (isUrgent) SoftTerracotta.copy(alpha = 0.5f) else SoftSage.copy(alpha = 0.7f),
-                                    modifier = Modifier.size(56.dp)
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Column(
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.Center
+                                    // Countdown Badge
+                                    Surface(
+                                        shape = RoundedCornerShape(Dimens.radiusSmall),
+                                        color = if (daysLeft <= 3) SoftTerracotta else SoftSage,
+                                        modifier = Modifier.size(54.dp)
                                     ) {
-                                        Text(
-                                            text = "$daysRemaining",
-                                            style = MaterialTheme.typography.titleLarge.copy(
-                                                fontWeight = FontWeight.Bold,
-                                                color = if (isUrgent) SoftDanger else PrimaryForest
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.Center,
+                                            modifier = Modifier.fillMaxSize()
+                                        ) {
+                                            Text(
+                                                text = if (daysLeft >= 0) "$daysLeft" else "Past",
+                                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                                color = if (daysLeft <= 3) SoftDanger else PrimaryForest
                                             )
-                                        )
-                                        Text(
-                                            text = "DAYS",
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                fontSize = 9.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = if (isUrgent) SoftDanger else PrimaryForest
-                                            )
-                                        )
-                                    }
-                                }
-
-                                Spacer(modifier = Modifier.width(14.dp))
-
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(
-                                            text = exam.title,
-                                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                            color = MaterialTheme.colorScheme.onSurface
-                                        )
-                                        if (sub != null) {
-                                            Spacer(modifier = Modifier.width(8.dp))
-                                            SubjectChip(
-                                                name = sub.name.take(10),
-                                                code = sub.code,
-                                                colorHex = sub.color
+                                            Text(
+                                                text = if (daysLeft >= 0) "days" else "",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = if (daysLeft <= 3) SoftDanger else PrimaryForest
                                             )
                                         }
                                     }
 
-                                    Spacer(modifier = Modifier.height(3.dp))
-                                    Text(
-                                        text = "${exam.examDate} @ ${exam.examTime} · ${exam.location}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
+                                    Spacer(modifier = Modifier.width(Dimens.spaceMedium))
 
-                                Surface(
-                                    shape = RoundedCornerShape(10.dp),
-                                    color = SoftSage.copy(alpha = 0.7f)
-                                ) {
-                                    Text(
-                                        text = "Target: ${exam.targetGrade}",
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            color = PrimaryForest
-                                        ),
-                                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp)
-                                    )
-                                }
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = exam.title,
+                                                style = MaterialTheme.typography.titleMedium.copy(
+                                                    fontWeight = FontWeight.Bold
+                                                ),
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                                modifier = Modifier.weight(1f, fill = false)
+                                            )
+                                            Spacer(modifier = Modifier.width(Dimens.spaceSmall))
+                                            Surface(
+                                                shape = RoundedCornerShape(Dimens.radiusChip),
+                                                color = SoftSage.copy(alpha = 0.6f)
+                                            ) {
+                                                Text(
+                                                    text = "Target: ${exam.targetGrade}",
+                                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                                    color = PrimaryForest,
+                                                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
+                                                )
+                                            }
+                                        }
 
-                                Spacer(modifier = Modifier.width(6.dp))
+                                        Spacer(modifier = Modifier.height(2.dp))
 
-                                IconButton(
-                                    onClick = { viewModel.deleteExam(exam) },
-                                    modifier = Modifier.size(28.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Delete,
-                                        contentDescription = "Delete",
-                                        tint = SoftDanger.copy(alpha = 0.8f),
-                                        modifier = Modifier.size(18.dp)
-                                    )
+                                        Text(
+                                            text = "${exam.examDate} · ${exam.examTime} · ${exam.location}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+
+                                        if (sub != null) {
+                                            Spacer(modifier = Modifier.height(6.dp))
+                                            SubjectChip(name = sub.name, colorHex = sub.color, code = sub.code)
+                                        }
+                                    }
+
+                                    IconButton(
+                                        onClick = { viewModel.deleteExam(exam) },
+                                        modifier = Modifier.size(32.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = "Delete",
+                                            tint = SoftDanger.copy(alpha = 0.7f),
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
                                 }
                             }
+                        }
+
+                        item {
+                            Spacer(modifier = Modifier.height(84.dp))
                         }
                     }
                 }

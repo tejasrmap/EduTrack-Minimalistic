@@ -19,6 +19,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -138,22 +139,6 @@ fun EduTrackApp(
     }
 
     Scaffold(
-        topBar = {
-            if (isTopLevel && currentRoute != Screen.Dashboard.route) {
-                AcademicHeader(
-                    title = when (currentRoute) {
-                        Screen.Subjects.route -> "Curriculum"
-                        Screen.Timer.route -> "Focus Mode"
-                        Screen.Planner.route -> "Academic Agenda"
-                        Screen.Analytics.route -> "Performance"
-                        else -> "Academic Suite"
-                    },
-                    onSearchClick = { showGlobalSearch = true },
-                    onNotificationsClick = { navController.navigate(Screen.Notifications.route) },
-                    unreadNotificationsCount = unreadCount
-                )
-            }
-        },
         bottomBar = {
             if (isTopLevel) {
                 EduTrackBottomBar(
@@ -169,12 +154,13 @@ fun EduTrackApp(
             }
         },
         floatingActionButton = {
-            if (isTopLevel) {
+            if (isTopLevel && currentRoute != Screen.Timer.route) {
                 FloatingActionButton(
                     onClick = { showQuickAdd = true },
                     containerColor = PrimaryForest,
                     contentColor = androidx.compose.ui.graphics.Color.White,
-                    shape = androidx.compose.foundation.shape.CircleShape
+                    shape = androidx.compose.foundation.shape.CircleShape,
+                    modifier = Modifier.padding(bottom = 8.dp)
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Quick Add")
                 }

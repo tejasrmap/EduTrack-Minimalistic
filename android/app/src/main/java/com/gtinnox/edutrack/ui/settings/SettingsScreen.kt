@@ -1,6 +1,7 @@
 package com.gtinnox.edutrack.ui.settings
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,10 +11,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Restore
@@ -23,7 +24,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -46,12 +46,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.gtinnox.edutrack.ui.components.AcademicEditorialHeader
 import com.gtinnox.edutrack.ui.components.OrganicCard
 import com.gtinnox.edutrack.ui.components.SectionHeader
+import com.gtinnox.edutrack.ui.theme.Dimens
 import com.gtinnox.edutrack.ui.theme.PrimaryForest
 import com.gtinnox.edutrack.ui.theme.SoftDanger
 import com.gtinnox.edutrack.ui.theme.SoftSage
+import com.gtinnox.edutrack.ui.theme.adaptiveHorizontalPadding
 import com.gtinnox.edutrack.ui.viewmodel.SettingsViewModel
 import kotlinx.coroutines.flow.collectLatest
 
@@ -63,6 +65,7 @@ fun SettingsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val horizontalPadding = adaptiveHorizontalPadding()
 
     var showResetDialog by remember { mutableStateOf(false) }
     var showImportDialog by remember { mutableStateOf(false) }
@@ -94,7 +97,7 @@ fun SettingsScreen(
                     Text("Cancel")
                 }
             },
-            shape = RoundedCornerShape(24.dp)
+            shape = RoundedCornerShape(Dimens.radiusLarge)
         )
     }
 
@@ -108,7 +111,7 @@ fun SettingsScreen(
                     onValueChange = { importJsonText = it },
                     placeholder = { Text("Paste exported JSON here...") },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(Dimens.radiusSmall),
                     minLines = 4,
                     maxLines = 8
                 )
@@ -119,7 +122,7 @@ fun SettingsScreen(
                         showImportDialog = false
                         viewModel.importData(importJsonText)
                     },
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(Dimens.radiusMedium),
                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryForest)
                 ) {
                     Text("Import & Restore")
@@ -130,7 +133,7 @@ fun SettingsScreen(
                     Text("Cancel")
                 }
             },
-            shape = RoundedCornerShape(24.dp)
+            shape = RoundedCornerShape(Dimens.radiusLarge)
         )
     }
 
@@ -139,202 +142,185 @@ fun SettingsScreen(
         containerColor = Color.Transparent,
         modifier = modifier
     ) { padding ->
-        LazyColumn(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 22.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp)
+                .padding(padding),
+            contentAlignment = Alignment.TopCenter
         ) {
-            // Header directly on background
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "PREFERENCES & SYSTEM",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                letterSpacing = 1.5.sp,
-                                fontWeight = FontWeight.Bold
-                            ),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = "Settings & Storage",
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
-            }
-
-            // Appearance & Theme Card
-            item {
-                OrganicCard(
-                    cornerRadius = 24.dp,
-                    contentPadding = 20.dp
-                ) {
-                    SectionHeader(title = "Appearance & Theme")
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(
-                                text = "Dark Mode Atmosphere",
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = "Midnight high-contrast palette (#171A18)",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        Switch(
-                            checked = uiState.isDarkMode,
-                            onCheckedChange = { viewModel.toggleDarkMode(it) },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = PrimaryForest,
-                                checkedTrackColor = SoftSage
-                            )
-                        )
-                    }
-                }
-            }
-
-            // Focus & Timer Intervals Card
-            item {
-                OrganicCard(
-                    cornerRadius = 24.dp,
-                    contentPadding = 20.dp
-                ) {
-                    SectionHeader(title = "Focus & Pomodoro Timer")
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Text(
-                        text = "Default Focus Interval",
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .widthIn(max = Dimens.maxContentWidth)
+                    .padding(horizontal = horizontalPadding),
+                verticalArrangement = Arrangement.spacedBy(Dimens.spaceSection)
+            ) {
+                // Header directly on background
+                item {
+                    AcademicEditorialHeader(
+                        title = "Settings & Storage",
+                        category = "Preferences & System",
+                        onBackClick = onNavigateBack
                     )
-                    Spacer(modifier = Modifier.height(6.dp))
+                }
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        listOf(20, 25, 45, 50).forEach { mins ->
-                            val isSel = uiState.pomodoroMinutes == mins
-                            FilterChip(
-                                selected = isSel,
-                                onClick = { viewModel.setPomodoroMinutes(mins) },
-                                label = { Text("${mins}m") },
-                                shape = RoundedCornerShape(12.dp),
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = SoftSage,
-                                    selectedLabelColor = PrimaryForest
+                // Appearance & Theme Card
+                item {
+                    OrganicCard(
+                        cornerRadius = Dimens.radiusLarge,
+                        contentPadding = Dimens.spaceLarge
+                    ) {
+                        SectionHeader(title = "Appearance & Theme")
+                        Spacer(modifier = Modifier.height(Dimens.spaceMedium))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    text = "Dark Mode Atmosphere",
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "Midnight obsidian palette (#171A18)",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Switch(
+                                checked = uiState.isDarkMode,
+                                onCheckedChange = { viewModel.toggleDarkMode(it) },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = PrimaryForest,
+                                    checkedTrackColor = SoftSage
                                 )
                             )
                         }
                     }
+                }
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                // Focus & Timer Intervals Card
+                item {
+                    OrganicCard(
+                        cornerRadius = Dimens.radiusLarge,
+                        contentPadding = Dimens.spaceLarge
                     ) {
-                        Column {
-                            Text(
-                                text = "Acoustic Chime & Ticks",
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = "Audio cues when focus intervals conclude",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                        SectionHeader(title = "Focus & Pomodoro Timer")
+                        Spacer(modifier = Modifier.height(Dimens.spaceMedium))
+
+                        Text(
+                            text = "Default Focus Interval",
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.spaceSmall)) {
+                            listOf(20, 25, 45, 50).forEach { mins ->
+                                val isSel = uiState.pomodoroMinutes == mins
+                                FilterChip(
+                                    selected = isSel,
+                                    onClick = { viewModel.setPomodoroMinutes(mins) },
+                                    label = { Text("${mins}m") },
+                                    shape = RoundedCornerShape(Dimens.radiusChip),
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = SoftSage,
+                                        selectedLabelColor = PrimaryForest
+                                    )
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(Dimens.spaceStandard))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    text = "Acoustic Chime & Ticks",
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "Audio cues when focus intervals conclude",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Switch(
+                                checked = uiState.soundEnabled,
+                                onCheckedChange = { viewModel.setSoundEnabled(it) },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = PrimaryForest,
+                                    checkedTrackColor = SoftSage
+                                )
                             )
                         }
-                        Switch(
-                            checked = uiState.soundEnabled,
-                            onCheckedChange = { viewModel.setSoundEnabled(it) },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = PrimaryForest,
-                                checkedTrackColor = SoftSage
-                            )
+                    }
+                }
+
+                // Data Export, Import & Database Operations
+                item {
+                    OrganicCard(
+                        cornerRadius = Dimens.radiusLarge,
+                        contentPadding = Dimens.spaceLarge
+                    ) {
+                        SectionHeader(title = "Data Persistence & Database")
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "Native Room Database · 9 Entities with Foreign Key Cascading",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        Spacer(modifier = Modifier.height(Dimens.spaceStandard))
+
+                        Button(
+                            onClick = { viewModel.exportData() },
+                            modifier = Modifier.fillMaxWidth().height(Dimens.buttonHeight),
+                            shape = RoundedCornerShape(Dimens.radiusMedium),
+                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryForest),
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
+                        ) {
+                            Icon(Icons.Default.CloudDownload, contentDescription = null, modifier = Modifier.size(Dimens.iconMedium))
+                            Spacer(modifier = Modifier.width(Dimens.spaceSmall))
+                            Text("Export Database as JSON Backup", fontWeight = FontWeight.Bold)
+                        }
+
+                        Spacer(modifier = Modifier.height(Dimens.spaceMedium))
+
+                        OutlinedButton(
+                            onClick = { showImportDialog = true },
+                            modifier = Modifier.fillMaxWidth().height(Dimens.buttonHeight),
+                            shape = RoundedCornerShape(Dimens.radiusMedium)
+                        ) {
+                            Icon(Icons.Default.CloudUpload, contentDescription = null, modifier = Modifier.size(Dimens.iconMedium))
+                            Spacer(modifier = Modifier.width(Dimens.spaceSmall))
+                            Text("Import JSON Backup", fontWeight = FontWeight.Bold)
+                        }
+
+                        Spacer(modifier = Modifier.height(Dimens.spaceMedium))
+
+                        OutlinedButton(
+                            onClick = { showResetDialog = true },
+                            modifier = Modifier.fillMaxWidth().height(Dimens.buttonHeight),
+                            shape = RoundedCornerShape(Dimens.radiusMedium)
+                        ) {
+                            Icon(Icons.Default.Restore, contentDescription = null, tint = SoftDanger, modifier = Modifier.size(Dimens.iconMedium))
+                            Spacer(modifier = Modifier.width(Dimens.spaceSmall))
+                            Text("Reset Academic Curriculum to Seed Data", color = SoftDanger, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
-            }
 
-            // Data Export, Import & Database Operations
-            item {
-                OrganicCard(
-                    cornerRadius = 24.dp,
-                    contentPadding = 20.dp
-                ) {
-                    SectionHeader(title = "Data Persistence & Database")
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Native Room Database · 9 Entities with Foreign Key Cascading",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Button(
-                        onClick = { viewModel.exportData() },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryForest),
-                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
-                    ) {
-                        Icon(Icons.Default.CloudDownload, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Export Database as JSON Backup", fontWeight = FontWeight.Bold)
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    OutlinedButton(
-                        onClick = { showImportDialog = true },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
-                        Icon(Icons.Default.CloudUpload, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Import JSON Backup", fontWeight = FontWeight.Bold)
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    OutlinedButton(
-                        onClick = { showResetDialog = true },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
-                        Icon(Icons.Default.Restore, contentDescription = null, tint = SoftDanger, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Reset Academic Curriculum to Seed Data", color = SoftDanger, fontWeight = FontWeight.Bold)
-                    }
+                item {
+                    Spacer(modifier = Modifier.height(36.dp))
                 }
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(28.dp))
             }
         }
     }

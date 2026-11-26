@@ -1,6 +1,5 @@
 package com.gtinnox.edutrack.ui.navigation
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,8 +11,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -36,15 +35,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.gtinnox.edutrack.ui.components.AcademicEditorialHeader
 import com.gtinnox.edutrack.ui.components.OrganicCard
 import com.gtinnox.edutrack.ui.components.SectionHeader
 import com.gtinnox.edutrack.ui.theme.DeepForest
+import com.gtinnox.edutrack.ui.theme.Dimens
 import com.gtinnox.edutrack.ui.theme.PrimaryForest
 import com.gtinnox.edutrack.ui.theme.SoftSage
 import com.gtinnox.edutrack.ui.theme.SoftSuccess
 import com.gtinnox.edutrack.ui.theme.SoftTerracotta
+import com.gtinnox.edutrack.ui.theme.adaptiveHorizontalPadding
 
 data class MenuItem(
     val title: String,
@@ -59,6 +61,8 @@ fun MoreMenuScreen(
     onNavigate: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val horizontalPadding = adaptiveHorizontalPadding()
+
     val academicItems = listOf(
         MenuItem(
             title = "Study Session History",
@@ -128,61 +132,50 @@ fun MoreMenuScreen(
         )
     )
 
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 22.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.TopCenter
     ) {
-        item {
-            Spacer(modifier = Modifier.height(4.dp))
-            Column {
-                Text(
-                    text = "ACADEMIC PORTAL",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        letterSpacing = 2.sp,
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Navigation & Suite Hub",
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = "Coursework modules, scholar tools & preferences",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .widthIn(max = Dimens.maxContentWidth)
+                .padding(horizontal = horizontalPadding),
+            verticalArrangement = Arrangement.spacedBy(Dimens.spaceSection)
+        ) {
+            item {
+                AcademicEditorialHeader(
+                    title = "Navigation & Suite Hub",
+                    category = "Academic Portal",
+                    subtitle = "Coursework modules, scholar tools & preferences"
                 )
             }
-        }
 
-        // Academic Modules Section
-        item {
-            SectionHeader(title = "Academic Modules")
-            Spacer(modifier = Modifier.height(8.dp))
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                academicItems.forEach { item ->
-                    MoreMenuRow(item = item, onClick = { onNavigate(item.route) })
+            // Academic Modules Section
+            item {
+                SectionHeader(title = "Academic Modules")
+                Spacer(modifier = Modifier.height(Dimens.spaceSmall))
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.spaceSmall)) {
+                    academicItems.forEach { item ->
+                        MoreMenuRow(item = item, onClick = { onNavigate(item.route) })
+                    }
                 }
             }
-        }
 
-        // System & Persona Section
-        item {
-            SectionHeader(title = "System & Settings")
-            Spacer(modifier = Modifier.height(8.dp))
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                systemItems.forEach { item ->
-                    MoreMenuRow(item = item, onClick = { onNavigate(item.route) })
+            // System & Persona Section
+            item {
+                SectionHeader(title = "System & Settings")
+                Spacer(modifier = Modifier.height(Dimens.spaceSmall))
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.spaceSmall)) {
+                    systemItems.forEach { item ->
+                        MoreMenuRow(item = item, onClick = { onNavigate(item.route) })
+                    }
                 }
             }
-        }
 
-        item {
-            Spacer(modifier = Modifier.height(28.dp))
+            item {
+                Spacer(modifier = Modifier.height(84.dp))
+            }
         }
     }
 }
@@ -193,8 +186,8 @@ private fun MoreMenuRow(
     onClick: () -> Unit
 ) {
     OrganicCard(
-        cornerRadius = 20.dp,
-        contentPadding = 16.dp,
+        cornerRadius = Dimens.radiusMedium,
+        contentPadding = Dimens.spaceStandard,
         onClick = onClick
     ) {
         Row(
@@ -203,7 +196,7 @@ private fun MoreMenuRow(
         ) {
             Surface(
                 modifier = Modifier.size(44.dp),
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(Dimens.radiusSmall),
                 color = SoftSage.copy(alpha = 0.6f)
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -211,31 +204,37 @@ private fun MoreMenuRow(
                         imageVector = item.icon,
                         contentDescription = null,
                         tint = item.iconColor,
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(Dimens.iconStandard)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.width(14.dp))
+            Spacer(modifier = Modifier.width(Dimens.spaceMedium))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = item.title,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = item.subtitle,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
+
+            Spacer(modifier = Modifier.width(Dimens.spaceSmall))
 
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(Dimens.iconSmall)
             )
         }
     }
