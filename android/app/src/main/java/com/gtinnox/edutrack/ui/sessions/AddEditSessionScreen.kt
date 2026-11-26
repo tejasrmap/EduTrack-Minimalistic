@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -29,6 +31,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -40,10 +43,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.gtinnox.edutrack.ui.components.PremiumCard
 import com.gtinnox.edutrack.ui.components.SubjectChip
-import com.gtinnox.edutrack.ui.theme.AcademicIndigo
+import com.gtinnox.edutrack.ui.theme.EduTrackPrimary
+import com.gtinnox.edutrack.ui.theme.EduTrackPrimarySoft
+import com.gtinnox.edutrack.ui.theme.EduTrackSuccess
 import com.gtinnox.edutrack.ui.viewmodel.SessionUiEvent
 import com.gtinnox.edutrack.ui.viewmodel.SessionViewModel
 import com.gtinnox.edutrack.ui.viewmodel.SubjectViewModel
@@ -93,137 +100,214 @@ fun AddEditSessionScreen(
         "assignment" to "Problem Set / Assignment"
     )
 
+    val quickDurations = listOf(15, 25, 45, 60, 90, 120)
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = Color.Transparent,
         modifier = modifier
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 20.dp)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Header
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onNavigateBack) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                 }
                 Text(
-                    text = if (existing == null) "Log Study Session" else "Edit Study Session",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    text = if (existing != null) "Edit Study Session" else "Log Study Session",
+                    style = MaterialTheme.typography.headlineLarge,
                     modifier = Modifier.weight(1f)
                 )
             }
 
-            // Subject Picker
-            Text("Select Academic Subject *", style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold))
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                subjects.forEach { sub ->
-                    val isSelected = selectedSubjectId == sub.id
-                    FilterChip(
-                        selected = isSelected,
-                        onClick = { selectedSubjectId = sub.id },
-                        label = { Text("${sub.code} · ${sub.name}") },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = AcademicIndigo.copy(alpha = 0.15f),
-                            selectedLabelColor = AcademicIndigo
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    )
+            // Subject Selector Card
+            PremiumCard(contentPadding = 18.dp) {
+                Text(
+                    text = "Associated Course",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(subjects) { sub ->
+                        val isSelected = selectedSubjectId == sub.id
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = { selectedSubjectId = sub.id },
+                            label = { Text(sub.name) },
+                            shape = RoundedCornerShape(10.dp),
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = EduTrackPrimarySoft,
+                                selectedLabelColor = EduTrackPrimary
+                            )
+                        )
+                    }
                 }
             }
 
-            OutlinedTextField(
-                value = durationText,
-                onValueChange = { durationText = it.filter { ch -> ch.isDigit() } },
-                label = { Text("Duration (Minutes) *") },
-                placeholder = { Text("e.g. 45 or 90") },
-                leadingIcon = { Icon(Icons.Default.Timer, contentDescription = null) },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
-            )
+            // Duration & Type Card
+            PremiumCard(contentPadding = 18.dp) {
+                Text(
+                    text = "Study Duration & Mode",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(12.dp))
 
-            // Session Type Chips
-            Text("Session Modality", style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold))
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                sessionTypes.forEach { (typeKey, label) ->
-                    val isSelected = sessionType == typeKey
-                    FilterChip(
-                        selected = isSelected,
-                        onClick = { sessionType = typeKey },
-                        label = { Text(label) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = AcademicIndigo.copy(alpha = 0.15f),
-                            selectedLabelColor = AcademicIndigo
+                OutlinedTextField(
+                    value = durationText,
+                    onValueChange = { durationText = it },
+                    label = { Text("Duration (Minutes) *") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Quick duration pills
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    items(quickDurations) { d ->
+                        val isCurrent = durationText == d.toString()
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = if (isCurrent) EduTrackPrimarySoft else MaterialTheme.colorScheme.surfaceVariant,
+                            modifier = Modifier.clickable { durationText = d.toString() }
+                        ) {
+                            Text(
+                                text = "${d}m",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isCurrent) EduTrackPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                                ),
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Activity Classification",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    sessionTypes.forEach { (typeKey, typeLabel) ->
+                        val isSelected = sessionType == typeKey
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = if (isSelected) EduTrackPrimarySoft else MaterialTheme.colorScheme.surfaceVariant,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { sessionType = typeKey }
+                        ) {
+                            Text(
+                                text = typeLabel,
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (isSelected) EduTrackPrimary else MaterialTheme.colorScheme.onSurface
+                                ),
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Focus Quality Score
+            PremiumCard(contentPadding = 18.dp) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Focus Score",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "${focusScore.toInt()}%",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = EduTrackSuccess
                         )
                     )
                 }
-            }
 
-            // Focus Score Slider
-            Column {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text("Self-Assessed Focus Score", style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold))
-                    Text("${focusScore.toInt()}%", style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold), color = AcademicIndigo)
-                }
+                Spacer(modifier = Modifier.height(4.dp))
+
                 Slider(
                     value = focusScore,
                     onValueChange = { focusScore = it },
                     valueRange = 0f..100f,
-                    steps = 19,
                     colors = SliderDefaults.colors(
-                        thumbColor = AcademicIndigo,
-                        activeTrackColor = AcademicIndigo
+                        thumbColor = EduTrackPrimary,
+                        activeTrackColor = EduTrackPrimary
                     )
                 )
             }
 
-            OutlinedTextField(
-                value = notes,
-                onValueChange = { notes = it },
-                label = { Text("Session Reflections & Notes") },
-                placeholder = { Text("What algorithms were derived, exercises completed, or obstacles solved?") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(110.dp),
-                shape = RoundedCornerShape(12.dp)
-            )
+            // Reflection Notes
+            PremiumCard(contentPadding = 18.dp) {
+                Text(
+                    text = "Session Reflection & Completed Work",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(10.dp))
 
-            Spacer(modifier = Modifier.height(10.dp))
+                OutlinedTextField(
+                    value = notes,
+                    onValueChange = { notes = it },
+                    placeholder = { Text("Summary of pages read, problems solved, or derivations proved...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    minLines = 3
+                )
+            }
 
+            // Save Action
             Button(
                 onClick = {
-                    val duration = durationText.toIntOrNull() ?: 0
                     sessionViewModel.saveSession(
-                        id = existing?.id,
+                        id = sessionId,
                         subjectId = selectedSubjectId,
-                        durationMinutes = duration,
+                        durationMinutes = durationText.toIntOrNull() ?: 45,
                         sessionType = sessionType,
                         notes = notes,
-                        focusScore = focusScore.toInt(),
-                        isManual = true
+                        focusScore = focusScore.toInt()
                     )
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = AcademicIndigo),
-                shape = RoundedCornerShape(12.dp)
+                    .height(52.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = EduTrackPrimary)
             ) {
                 Text(
-                    text = if (existing == null) "Record Study Entry" else "Update Entry",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                    text = if (existing != null) "Update Session Record" else "Log Study Session",
+                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
                 )
             }
 
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(28.dp))
         }
     }
 }

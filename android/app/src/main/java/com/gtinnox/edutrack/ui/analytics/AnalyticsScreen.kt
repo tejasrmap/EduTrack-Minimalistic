@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.TrendingUp
@@ -22,15 +23,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.gtinnox.edutrack.ui.components.AcademicCard
+import com.gtinnox.edutrack.ui.components.AcademicCalendarHeatmap
 import com.gtinnox.edutrack.ui.components.FocusTrendChart
 import com.gtinnox.edutrack.ui.components.MetricCard
 import com.gtinnox.edutrack.ui.components.MinimalStudyBarChart
 import com.gtinnox.edutrack.ui.components.MinimalSubjectDonutChart
-import com.gtinnox.edutrack.ui.theme.AcademicAmber
-import com.gtinnox.edutrack.ui.theme.AcademicIndigo
-import com.gtinnox.edutrack.ui.theme.AcademicPurple
-import com.gtinnox.edutrack.ui.theme.AcademicSage
+import com.gtinnox.edutrack.ui.components.PremiumCard
+import com.gtinnox.edutrack.ui.components.SectionHeader
+import com.gtinnox.edutrack.ui.theme.EduTrackPrimary
+import com.gtinnox.edutrack.ui.theme.EduTrackSuccess
+import com.gtinnox.edutrack.ui.theme.EduTrackWarning
 import com.gtinnox.edutrack.ui.viewmodel.AnalyticsViewModel
 
 @Composable
@@ -43,14 +45,14 @@ fun AnalyticsScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(horizontal = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
         item {
             Column {
                 Text(
-                    text = "Academic Analytics",
-                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                    text = "Performance & Analytics",
+                    style = MaterialTheme.typography.headlineLarge,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
@@ -65,14 +67,15 @@ fun AnalyticsScreen(
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 MetricCard(
-                    title = "Total Time",
+                    title = "Total Focus Time",
                     value = String.format("%.1fh", uiState.totalStudyHours),
                     subtitle = "${uiState.totalSessionsCount} recorded blocks",
                     icon = Icons.Default.Timer,
-                    iconTint = AcademicIndigo,
+                    iconTint = EduTrackPrimary,
+                    comparison = "+8% this week",
                     modifier = Modifier.weight(1f)
                 )
 
@@ -81,7 +84,8 @@ fun AnalyticsScreen(
                     value = "${uiState.averageFocusScore}%",
                     subtitle = "Cognitive score",
                     icon = Icons.Default.Psychology,
-                    iconTint = AcademicSage,
+                    iconTint = EduTrackSuccess,
+                    comparison = "Optimal zone",
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -89,70 +93,91 @@ fun AnalyticsScreen(
 
         // Weekly Study Duration Bar Chart
         item {
-            AcademicCard {
-                Text(
-                    text = "Weekly Study Duration Distribution",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+            PremiumCard(contentPadding = 20.dp) {
+                SectionHeader(
+                    title = "Daily Focus Distribution",
+                    badgeText = "Goal: 3h/day"
                 )
+                Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = "Daily study minutes vs target threshold line (3h / day)",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
+                Spacer(modifier = Modifier.height(14.dp))
                 MinimalStudyBarChart(
                     trends = uiState.weeklyTrends,
-                    targetMinutes = 120
+                    targetMinutes = 180
                 )
             }
         }
 
-        // Subject Study Time Donut Distribution
+        // Subject Breakdown Donut Chart
         item {
-            AcademicCard {
-                Text(
-                    text = "Curriculum Time Breakdown",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+            PremiumCard(contentPadding = 20.dp) {
+                SectionHeader(
+                    title = "Curriculum Allocation",
+                    badgeText = "${uiState.subjectStats.size} Subjects"
                 )
+                Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "Percentage distribution across enrolled modules",
+                    text = "Proportional study time invested across academic subjects",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                MinimalSubjectDonutChart(
-                    stats = uiState.subjectStats
-                )
+                Spacer(modifier = Modifier.height(14.dp))
+                MinimalSubjectDonutChart(stats = uiState.subjectStats)
             }
         }
 
-        // Focus Quality Trend Chart
+        // Focus Score Trend Line Chart
+        if (uiState.focusTrendScores.isNotEmpty()) {
+            item {
+                PremiumCard(contentPadding = 20.dp) {
+                    SectionHeader(
+                        title = "Cognitive Focus Trend",
+                        badgeText = "Recent Sessions"
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "Historical focus scores recorded across consecutive study blocks",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(14.dp))
+                    FocusTrendChart(scores = uiState.focusTrendScores)
+                }
+            }
+        }
+
+        // Academic Calendar Activity Heatmap
         item {
-            AcademicCard {
-                Text(
-                    text = "Focus Score Chronology",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+            PremiumCard(contentPadding = 20.dp) {
+                SectionHeader(
+                    title = "Study Activity Heatmap",
+                    badgeText = "Past 28 Days"
                 )
+                Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "Self-assessed cognitive attention scores across sessions",
+                    text = "Daily study consistency and volume density grid",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-
                 Spacer(modifier = Modifier.height(16.dp))
 
-                FocusTrendChart(
-                    scores = listOf(85, 92, 88, 95, 90, 84, 96, 92)
+                // Generate 28-day sample levels (0=empty, 1=low, 2=med, 3=high)
+                val sampleLevels = listOf(
+                    2, 3, 1, 0, 3, 2, 2,
+                    1, 2, 3, 3, 2, 0, 1,
+                    3, 2, 2, 3, 1, 2, 3,
+                    2, 3, 3, 2, 3, 2, 3
                 )
+                AcademicCalendarHeatmap(days = sampleLevels)
             }
         }
 
         item {
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(28.dp))
         }
     }
 }

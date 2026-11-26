@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.FilterChip
@@ -37,13 +38,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.gtinnox.edutrack.ui.components.AcademicCard
+import com.gtinnox.edutrack.ui.components.AcademicEmptyState
+import com.gtinnox.edutrack.ui.components.PremiumCard
 import com.gtinnox.edutrack.ui.components.SubjectChip
-import com.gtinnox.edutrack.ui.theme.AcademicIndigo
-import com.gtinnox.edutrack.ui.theme.AcademicRose
-import com.gtinnox.edutrack.ui.theme.AcademicSage
+import com.gtinnox.edutrack.ui.theme.EduTrackDanger
+import com.gtinnox.edutrack.ui.theme.EduTrackPrimary
+import com.gtinnox.edutrack.ui.theme.EduTrackPrimarySoft
+import com.gtinnox.edutrack.ui.theme.EduTrackSuccess
 import com.gtinnox.edutrack.ui.viewmodel.HistoryViewModel
 import kotlinx.coroutines.flow.collectLatest
 
@@ -68,150 +72,161 @@ fun HistoryScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = Color.Transparent,
         modifier = modifier
     ) { padding ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item {
-                Column {
-                    Text(
-                        text = "Session History",
-                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "${sessions.size} Recorded Study Logs",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            item {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { viewModel.setSearchQuery(it) },
-                    placeholder = { Text("Filter sessions by subject or notes...") },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    singleLine = true
+            // Header
+            Column {
+                Text(
+                    text = "Study Session History",
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "${sessions.size} Recorded Cognitive Focus Blocks",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
-            // Subject Filter Row
-            item {
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    item {
-                        FilterChip(
-                            selected = selectedSubjectId == null,
-                            onClick = { viewModel.setSubjectFilter(null) },
-                            label = { Text("All Subjects") },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = AcademicIndigo.copy(alpha = 0.15f),
-                                selectedLabelColor = AcademicIndigo
-                            )
-                        )
-                    }
-                    items(subjects) { s ->
-                        FilterChip(
-                            selected = selectedSubjectId == s.id,
-                            onClick = { viewModel.setSubjectFilter(s.id) },
-                            label = { Text(s.code) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = AcademicIndigo.copy(alpha = 0.15f),
-                                selectedLabelColor = AcademicIndigo
-                            )
-                        )
-                    }
-                }
-            }
+            // Search Bar
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { viewModel.setSearchQuery(it) },
+                placeholder = { Text("Filter sessions by reflection notes...") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                singleLine = true
+            )
 
-            if (sessions.isEmpty()) {
+            // Subject Filter Strip
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 item {
-                    AcademicCard {
-                        Text(
-                            text = "No study records match your filter criteria.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                    FilterChip(
+                        selected = selectedSubjectId == null,
+                        onClick = { viewModel.setSubjectFilter(null) },
+                        label = { Text("All Subjects") },
+                        shape = RoundedCornerShape(10.dp),
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = EduTrackPrimarySoft,
+                            selectedLabelColor = EduTrackPrimary
                         )
-                    }
+                    )
                 }
-            } else {
-                items(sessions) { item ->
-                    val s = item.session
-                    val subject = item.subject
 
-                    AcademicCard(
-                        onClick = { onNavigateToDetail(s.id) }
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            if (subject != null) {
-                                SubjectChip(name = subject.name, code = subject.code, colorHex = subject.color)
-                            }
-                            Text(
-                                text = "Focus: ${s.focusScore}%",
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                color = AcademicSage
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column {
-                                Text(
-                                    text = "${s.durationMinutes} Minutes",
-                                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                                    color = AcademicIndigo
-                                )
-                                Text(
-                                    text = "Modality: ${s.sessionType.replace("_", " ").uppercase()}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-
-                            IconButton(onClick = { viewModel.deleteSession(s) }) {
-                                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = AcademicRose, modifier = Modifier.size(18.dp))
-                            }
-                        }
-
-                        if (s.notes.isNotBlank()) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = s.notes,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 2
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Logged: ${s.startTime.take(10)}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                items(subjects) { sub ->
+                    val isSelected = selectedSubjectId == sub.id
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = { viewModel.setSubjectFilter(sub.id) },
+                        label = { Text(sub.code.ifBlank { sub.name }) },
+                        shape = RoundedCornerShape(10.dp),
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = EduTrackPrimarySoft,
+                            selectedLabelColor = EduTrackPrimary
                         )
-                    }
+                    )
                 }
             }
 
-            item {
-                Spacer(modifier = Modifier.height(40.dp))
+            // Sessions List
+            if (sessions.isEmpty()) {
+                AcademicEmptyState(
+                    icon = Icons.Default.History,
+                    title = "No Focus Sessions Recorded",
+                    description = "Completed Pomodoro intervals and manual study logs will appear here."
+                )
+            } else {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(sessions) { sessionItem ->
+                        val session = sessionItem.session
+                        val sub = sessionItem.subject
+
+                        PremiumCard(
+                            contentPadding = 16.dp,
+                            onClick = { onNavigateToDetail(session.id) }
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                if (sub != null) {
+                                    SubjectChip(
+                                        name = sub.name.take(12),
+                                        code = sub.code,
+                                        colorHex = sub.color
+                                    )
+                                } else {
+                                    Text("General Focus", style = MaterialTheme.typography.titleMedium)
+                                }
+
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = EduTrackPrimarySoft
+                                    ) {
+                                        Text(
+                                            text = "${session.durationMinutes} mins",
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                color = EduTrackPrimary
+                                            ),
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "${session.focusScore}% Score",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            color = EduTrackSuccess
+                                        )
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    IconButton(
+                                        onClick = { viewModel.deleteSession(session) },
+                                        modifier = Modifier.size(24.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = "Delete",
+                                            tint = EduTrackDanger.copy(alpha = 0.7f),
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                }
+                            }
+
+                            if (session.notes.isNotBlank()) {
+                                Spacer(modifier = Modifier.height(10.dp))
+                                Text(
+                                    text = session.notes,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    maxLines = 2
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     }

@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
@@ -44,14 +45,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.gtinnox.edutrack.ui.components.AcademicCard
+import com.gtinnox.edutrack.ui.components.AcademicEmptyState
+import com.gtinnox.edutrack.ui.components.PremiumCard
+import com.gtinnox.edutrack.ui.components.PriorityChip
 import com.gtinnox.edutrack.ui.components.SubjectChip
-import com.gtinnox.edutrack.ui.theme.AcademicAmber
-import com.gtinnox.edutrack.ui.theme.AcademicIndigo
-import com.gtinnox.edutrack.ui.theme.AcademicRose
-import com.gtinnox.edutrack.ui.theme.AcademicSage
+import com.gtinnox.edutrack.ui.theme.EduTrackDanger
+import com.gtinnox.edutrack.ui.theme.EduTrackPrimary
+import com.gtinnox.edutrack.ui.theme.EduTrackPrimarySoft
+import com.gtinnox.edutrack.ui.theme.EduTrackSuccess
+import com.gtinnox.edutrack.ui.theme.EduTrackWarning
 import com.gtinnox.edutrack.ui.viewmodel.AssignmentViewModel
 import kotlinx.coroutines.flow.collectLatest
 import java.time.LocalDate
@@ -85,7 +90,12 @@ fun AssignmentsScreen(
 
         AlertDialog(
             onDismissRequest = { showAddDialog = false },
-            title = { Text("New Academic Assignment") },
+            title = {
+                Text(
+                    text = "New Academic Deliverable",
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                )
+            },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     OutlinedTextField(
@@ -94,56 +104,75 @@ fun AssignmentsScreen(
                         label = { Text("Deliverable Title *") },
                         placeholder = { Text("e.g. Dynamic Programming Problem Set") },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp)
+                        shape = RoundedCornerShape(12.dp)
                     )
 
                     Text("Subject *", style = MaterialTheme.typography.labelSmall)
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        subjects.take(4).forEach { s ->
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        items(subjects) { s ->
                             FilterChip(
                                 selected = subjectId == s.id,
                                 onClick = { subjectId = s.id },
-                                label = { Text(s.name) }
+                                label = { Text(s.code.ifBlank { s.name }) },
+                                shape = RoundedCornerShape(8.dp),
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = EduTrackPrimarySoft,
+                                    selectedLabelColor = EduTrackPrimary
+                                )
                             )
                         }
                     }
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(
-                            value = dueDate,
-                            onValueChange = { dueDate = it },
-                            label = { Text("Due Date (YYYY-MM-DD)") },
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(10.dp)
-                        )
+                    OutlinedTextField(
+                        value = dueDate,
+                        onValueChange = { dueDate = it },
+                        label = { Text("Due Date (YYYY-MM-DD)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+
+                    Text("Priority Level", style = MaterialTheme.typography.labelSmall)
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        listOf("low", "medium", "urgent").forEach { p ->
+                            FilterChip(
+                                selected = priority == p,
+                                onClick = { priority = p },
+                                label = { Text(p.replaceFirstChar { it.uppercase() }) },
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                        }
                     }
 
                     OutlinedTextField(
                         value = description,
                         onValueChange = { description = it },
-                        label = { Text("Requirements & Rubric") },
+                        label = { Text("Notes & Requirements") },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp)
+                        shape = RoundedCornerShape(12.dp),
+                        minLines = 2
                     )
                 }
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        viewModel.saveTask(
-                            id = null,
-                            title = title,
-                            description = description,
-                            subjectId = subjectId,
-                            category = category,
-                            priority = priority,
-                            dueDate = dueDate
-                        )
-                        showAddDialog = false
+                        if (title.isNotBlank()) {
+                            viewModel.saveTask(
+                                id = null,
+                                title = title,
+                                description = description,
+                                subjectId = subjectId,
+                                category = category,
+                                priority = priority,
+                                dueDate = dueDate
+                            )
+                            showAddDialog = false
+                        }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = AcademicIndigo)
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = EduTrackPrimary)
                 ) {
-                    Text("Add Assignment")
+                    Text("Save Task", fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -156,157 +185,167 @@ fun AssignmentsScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = Color.Transparent,
         modifier = modifier
     ) { padding ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+            // Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "Assignments & Deliverables",
+                        style = MaterialTheme.typography.headlineLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "${tasks.count { it.status != "completed" }} Pending Deadlines",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Button(
+                    onClick = { showAddDialog = true },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = EduTrackPrimary)
                 ) {
-                    Column {
-                        Text(
-                            text = "Deliverables Hub",
-                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "${tasks.size} Academic Tasks Tracked",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    Button(
-                        onClick = { showAddDialog = true },
-                        colors = ButtonDefaults.buttonColors(containerColor = AcademicIndigo),
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Add Task")
-                    }
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("New Task", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
                 }
             }
 
-            // Status Filter Chips
-            item {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf("all" to "All Deliverables", "pending" to "Pending", "completed" to "Completed").forEach { (key, label) ->
-                        val isSelected = filterStatus == key
-                        FilterChip(
-                            selected = isSelected,
-                            onClick = { viewModel.setFilterStatus(key) },
-                            label = { Text(label) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = AcademicIndigo.copy(alpha = 0.15f),
-                                selectedLabelColor = AcademicIndigo
-                            )
-                        )
-                    }
-                }
+            // Status Filter Tabs (All / Pending / Completed)
+            val tabs = listOf("all" to "All Tasks", "pending" to "Pending", "completed" to "Completed")
+            val currentTabIndex = when (filterStatus) {
+                "pending" -> 1
+                "completed" -> 2
+                else -> 0
             }
 
-            if (tasks.isEmpty()) {
-                item {
-                    AcademicCard {
-                        Text(
-                            text = "No deliverables in this category.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            } else {
-                items(tasks) { task ->
-                    val subject = subjects.find { it.id == task.subjectId }
-                    val isCompleted = task.status == "completed"
-
-                    val priorityColor = when (task.priority) {
-                        "high" -> AcademicRose
-                        "medium" -> AcademicAmber
-                        else -> AcademicSage
-                    }
-
-                    AcademicCard {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(4.dp)
+                ) {
+                    tabs.forEachIndexed { index, (statusVal, label) ->
+                        val isSelected = currentTabIndex == index
+                        Surface(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable { viewModel.setFilterStatus(statusVal) },
+                            shape = RoundedCornerShape(10.dp),
+                            color = if (isSelected) MaterialTheme.colorScheme.surface else Color.Transparent
                         ) {
-                            Icon(
-                                imageVector = if (isCompleted) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
-                                contentDescription = "Toggle",
-                                tint = if (isCompleted) AcademicSage else AcademicAmber,
-                                modifier = Modifier
-                                    .size(24.dp)
-                                    .clickable { viewModel.toggleTask(task) }
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                                ),
+                                color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(vertical = 8.dp),
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
                             )
-
-                            Spacer(modifier = Modifier.width(12.dp))
-
-                            Column(modifier = Modifier.weight(1f)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    if (subject != null) {
-                                        SubjectChip(name = subject.name.take(12), code = subject.code, colorHex = subject.color)
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                    }
-                                    Surface(
-                                        shape = RoundedCornerShape(4.dp),
-                                        color = priorityColor.copy(alpha = 0.12f)
-                                    ) {
-                                        Text(
-                                            text = task.priority.uppercase(),
-                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                            color = priorityColor,
-                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                        )
-                                    }
-                                }
-
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = task.title,
-                                    style = MaterialTheme.typography.titleMedium.copy(
-                                        fontWeight = FontWeight.SemiBold,
-                                        textDecoration = if (isCompleted) androidx.compose.ui.text.style.TextDecoration.LineThrough else null
-                                    ),
-                                    color = if (isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
-                                )
-
-                                if (task.description.isNotBlank()) {
-                                    Text(
-                                        text = task.description,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        maxLines = 2
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.height(6.dp))
-                                Text(
-                                    text = "📅 Due: ${task.dueDate} · Category: ${task.category}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-
-                            IconButton(onClick = { viewModel.deleteTask(task) }) {
-                                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = AcademicRose, modifier = Modifier.size(18.dp))
-                            }
                         }
                     }
                 }
             }
 
-            item {
-                Spacer(modifier = Modifier.height(40.dp))
+            // Tasks List
+            if (tasks.isEmpty()) {
+                AcademicEmptyState(
+                    icon = Icons.Default.Assignment,
+                    title = "No Deliverables Found",
+                    description = "No assignments match your current filter criteria.",
+                    actionText = "Create Task",
+                    onActionClick = { showAddDialog = true }
+                )
+            } else {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(tasks) { task ->
+                        val sub = subjects.find { it.id == task.subjectId }
+                        val isCompleted = task.status == "completed"
+
+                        PremiumCard(
+                            contentPadding = 14.dp,
+                            onClick = { viewModel.toggleTask(task) }
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = if (isCompleted) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+                                    contentDescription = "Toggle",
+                                    tint = if (isCompleted) EduTrackSuccess else EduTrackWarning,
+                                    modifier = Modifier.size(22.dp)
+                                )
+
+                                Spacer(modifier = Modifier.width(12.dp))
+
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            text = task.title,
+                                            style = MaterialTheme.typography.titleMedium.copy(
+                                                fontWeight = FontWeight.Bold
+                                            ),
+                                            color = if (isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
+                                        )
+                                        if (sub != null) {
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            SubjectChip(
+                                                name = sub.name.take(10),
+                                                code = sub.code,
+                                                colorHex = sub.color
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = "Due: ${task.dueDate} · ${task.category.replaceFirstChar { it.uppercase() }}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+
+                                PriorityChip(priority = task.priority)
+
+                                Spacer(modifier = Modifier.width(6.dp))
+
+                                IconButton(
+                                    onClick = { viewModel.deleteTask(task) },
+                                    modifier = Modifier.size(24.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Delete",
+                                        tint = EduTrackDanger.copy(alpha = 0.7f),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }

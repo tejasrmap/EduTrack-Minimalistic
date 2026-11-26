@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,14 +16,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.CloudUpload
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Restore
-import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -44,12 +43,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.gtinnox.edutrack.ui.components.AcademicCard
-import com.gtinnox.edutrack.ui.theme.AcademicIndigo
-import com.gtinnox.edutrack.ui.theme.AcademicRose
-import com.gtinnox.edutrack.ui.theme.AcademicSage
+import com.gtinnox.edutrack.ui.components.PremiumCard
+import com.gtinnox.edutrack.ui.components.SectionHeader
+import com.gtinnox.edutrack.ui.theme.EduTrackDanger
+import com.gtinnox.edutrack.ui.theme.EduTrackPrimary
+import com.gtinnox.edutrack.ui.theme.EduTrackPrimarySoft
+import com.gtinnox.edutrack.ui.theme.EduTrackSuccess
 import com.gtinnox.edutrack.ui.viewmodel.SettingsViewModel
 import kotlinx.coroutines.flow.collectLatest
 
@@ -75,7 +77,7 @@ fun SettingsScreen(
     if (showResetDialog) {
         AlertDialog(
             onDismissRequest = { showResetDialog = false },
-            title = { Text("Restore Academic Curriculum?") },
+            title = { Text("Restore Academic Curriculum?", fontWeight = FontWeight.Bold) },
             text = { Text("This will reset your subjects, study sessions, and tasks back to the default Oxford University Computer Science dataset.") },
             confirmButton = {
                 TextButton(
@@ -84,7 +86,7 @@ fun SettingsScreen(
                         viewModel.resetToDefaults()
                     }
                 ) {
-                    Text("Reset Database", color = AcademicRose)
+                    Text("Reset Database", color = EduTrackDanger, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -98,30 +100,28 @@ fun SettingsScreen(
     if (showImportDialog) {
         AlertDialog(
             onDismissRequest = { showImportDialog = false },
-            title = { Text("Import Database Backup") },
+            title = { Text("Import Database Backup JSON", fontWeight = FontWeight.Bold) },
             text = {
-                Column {
-                    Text("Paste your exported JSON database payload below:")
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = importJsonText,
-                        onValueChange = { importJsonText = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(140.dp),
-                        shape = RoundedCornerShape(10.dp)
-                    )
-                }
+                OutlinedTextField(
+                    value = importJsonText,
+                    onValueChange = { importJsonText = it },
+                    placeholder = { Text("Paste exported JSON here...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    minLines = 4,
+                    maxLines = 8
+                )
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        viewModel.importData(importJsonText)
                         showImportDialog = false
+                        viewModel.importData(importJsonText)
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = AcademicIndigo)
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = EduTrackPrimary)
                 ) {
-                    Text("Restore")
+                    Text("Import & Restore")
                 }
             },
             dismissButton = {
@@ -134,34 +134,41 @@ fun SettingsScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = Color.Transparent,
         modifier = modifier
     ) { padding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Header
             item {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                     Text(
-                        text = "Preferences & System",
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        text = "System Settings & Data",
+                        style = MaterialTheme.typography.headlineLarge,
                         modifier = Modifier.weight(1f)
                     )
                 }
             }
 
-            // Appearance & Theme
+            // Appearance & Theme Card
             item {
-                AcademicCard {
+                PremiumCard(contentPadding = 18.dp) {
+                    SectionHeader(title = "Appearance & Theme")
+                    Spacer(modifier = Modifier.height(10.dp))
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -169,11 +176,12 @@ fun SettingsScreen(
                     ) {
                         Column {
                             Text(
-                                text = "Dark Academic Theme",
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                                text = "Dark Mode Atmosphere",
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "Low-glare high-contrast slate palette",
+                                text = "Midnight high-contrast palette (#15151D)",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -181,151 +189,120 @@ fun SettingsScreen(
                         Switch(
                             checked = uiState.isDarkMode,
                             onCheckedChange = { viewModel.toggleDarkMode(it) },
-                            colors = SwitchDefaults.colors(checkedThumbColor = AcademicIndigo)
+                            colors = SwitchDefaults.colors(checkedThumbColor = EduTrackPrimary)
                         )
                     }
                 }
             }
 
-            // Pomodoro Durations
+            // Focus & Timer Intervals Card
             item {
-                AcademicCard {
+                PremiumCard(contentPadding = 18.dp) {
+                    SectionHeader(title = "Focus & Pomodoro Timer")
+                    Spacer(modifier = Modifier.height(12.dp))
+
                     Text(
-                        text = "Focus Timer Preferences",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Default Focus Interval Length",
+                        text = "Default Focus Interval",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
+
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        listOf(25, 30, 45, 50).forEach { mins ->
+                        listOf(20, 25, 45, 50).forEach { mins ->
+                            val isSel = uiState.pomodoroMinutes == mins
                             FilterChip(
-                                selected = uiState.pomodoroMinutes == mins,
+                                selected = isSel,
                                 onClick = { viewModel.setPomodoroMinutes(mins) },
-                                label = { Text("${mins}m") }
+                                label = { Text("${mins}m") },
+                                shape = RoundedCornerShape(10.dp),
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = EduTrackPrimarySoft,
+                                    selectedLabelColor = EduTrackPrimary
+                                )
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "Audio Completion Alerts",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
+                        Column {
+                            Text(
+                                text = "Acoustic Chime & Ticks",
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "Audio cues when focus intervals conclude",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                         Switch(
                             checked = uiState.soundEnabled,
                             onCheckedChange = { viewModel.setSoundEnabled(it) },
-                            colors = SwitchDefaults.colors(checkedThumbColor = AcademicIndigo)
+                            colors = SwitchDefaults.colors(checkedThumbColor = EduTrackPrimary)
                         )
                     }
                 }
             }
 
-            // Data Management (Room DB, Export, Import, Reset)
+            // Data Export, Import & Database Operations
             item {
-                AcademicCard {
+                PremiumCard(contentPadding = 18.dp) {
+                    SectionHeader(title = "Data Persistence & Database")
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Database & Data Management",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Local persistence powered by SQLite & Room Database with ACID transactions.",
+                        text = "Native Room Database · 9 Entities with Foreign Key Cascading",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Button(
-                            onClick = { viewModel.exportData() },
-                            colors = ButtonDefaults.buttonColors(containerColor = AcademicIndigo),
-                            shape = RoundedCornerShape(10.dp),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(Icons.Default.CloudDownload, contentDescription = null)
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Export JSON")
-                        }
-
-                        OutlinedButton(
-                            onClick = { showImportDialog = true },
-                            shape = RoundedCornerShape(10.dp),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(Icons.Default.CloudUpload, contentDescription = null)
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Import JSON")
-                        }
+                    Button(
+                        onClick = { viewModel.exportData() },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = EduTrackPrimary)
+                    ) {
+                        Icon(Icons.Default.CloudDownload, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Export Database as JSON Backup", fontWeight = FontWeight.Bold)
                     }
 
-                    if (uiState.exportedJson != null) {
-                        Spacer(modifier = Modifier.height(10.dp))
-                        OutlinedTextField(
-                            value = uiState.exportedJson ?: "",
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Exported JSON Payload") },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(90.dp),
-                            shape = RoundedCornerShape(10.dp)
-                        )
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    OutlinedButton(
+                        onClick = { showImportDialog = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Default.CloudUpload, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Import JSON Backup", fontWeight = FontWeight.Bold)
                     }
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     OutlinedButton(
                         onClick = { showResetDialog = true },
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = AcademicRose),
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
-                        Icon(Icons.Default.Restore, contentDescription = null)
+                        Icon(Icons.Default.Restore, contentDescription = null, tint = EduTrackDanger, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Reset To Default Curriculum Data")
+                        Text("Reset Academic Curriculum to Seed Data", color = EduTrackDanger, fontWeight = FontWeight.Bold)
                     }
                 }
             }
 
-            // Architecture & Coursework Specs Card
             item {
-                AcademicCard {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Info, contentDescription = null, tint = AcademicIndigo)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Native Android Coursework Architecture",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "• Pure Kotlin & Jetpack Compose (Material 3)\n• Room SQLite Database with 9 Entities & DAOs\n• Clean MVVM Pattern with StateFlow & Coroutines\n• Navigation Compose with NavController & deep backstack\n• Zero WebView or hybrid wrappers\n• Canvas-rendered custom vector charts",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = "Version 1.0.0 (Native Release)",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = AcademicIndigo
-                    )
-                }
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(40.dp))
+                Spacer(modifier = Modifier.height(28.dp))
             }
         }
     }

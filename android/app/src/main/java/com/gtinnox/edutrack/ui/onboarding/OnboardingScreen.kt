@@ -33,10 +33,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.gtinnox.edutrack.ui.components.AcademicCard
-import com.gtinnox.edutrack.ui.theme.AcademicIndigo
+import com.gtinnox.edutrack.ui.components.PremiumCard
+import com.gtinnox.edutrack.ui.theme.EduTrackPrimary
+import com.gtinnox.edutrack.ui.theme.EduTrackPrimarySoft
+import com.gtinnox.edutrack.ui.theme.EduTrackSuccess
 import com.gtinnox.edutrack.ui.viewmodel.OnboardingViewModel
 import kotlinx.coroutines.flow.collectLatest
 
@@ -58,6 +61,7 @@ fun OnboardingScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = Color.Transparent,
         modifier = modifier
     ) { padding ->
         Column(
@@ -69,33 +73,37 @@ fun OnboardingScreen(
         ) {
             Text(
                 text = "EduTrack Academic Suite",
-                style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
-                color = AcademicIndigo
+                style = MaterialTheme.typography.displayMedium,
+                color = EduTrackPrimary
             )
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "Step ${state.currentStep} of 3 · Academic Onboarding",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(14.dp))
+
             LinearProgressIndicator(
                 progress = { state.currentStep / 3f },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(6.dp)
-                    .clip(RoundedCornerShape(3.dp)),
-                color = AcademicIndigo
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+                color = EduTrackPrimary,
+                trackColor = EduTrackPrimarySoft
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
             when (state.currentStep) {
                 1 -> {
-                    AcademicCard {
+                    PremiumCard(contentPadding = 20.dp) {
                         Text(
                             text = "Scholar Identity & Institution",
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(14.dp))
 
@@ -104,7 +112,7 @@ fun OnboardingScreen(
                             onValueChange = { viewModel.updateField(name = it) },
                             label = { Text("Full Name *") },
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(10.dp)
+                            shape = RoundedCornerShape(12.dp)
                         )
                         Spacer(modifier = Modifier.height(10.dp))
 
@@ -113,7 +121,7 @@ fun OnboardingScreen(
                             onValueChange = { viewModel.updateField(university = it) },
                             label = { Text("University / Institution *") },
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(10.dp)
+                            shape = RoundedCornerShape(12.dp)
                         )
                         Spacer(modifier = Modifier.height(10.dp))
 
@@ -122,32 +130,33 @@ fun OnboardingScreen(
                             onValueChange = { viewModel.updateField(program = it) },
                             label = { Text("Degree & Major *") },
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(10.dp)
+                            shape = RoundedCornerShape(12.dp)
                         )
                     }
                 }
                 2 -> {
-                    AcademicCard {
+                    PremiumCard(contentPadding = 20.dp) {
                         Text(
                             text = "Academic Quotas & Goals",
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(14.dp))
 
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             OutlinedTextField(
                                 value = state.academicYear,
                                 onValueChange = { viewModel.updateField(academicYear = it) },
                                 label = { Text("Academic Year") },
                                 modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(10.dp)
+                                shape = RoundedCornerShape(12.dp)
                             )
                             OutlinedTextField(
                                 value = state.semester,
                                 onValueChange = { viewModel.updateField(semester = it) },
                                 label = { Text("Semester / Term") },
                                 modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(10.dp)
+                                shape = RoundedCornerShape(12.dp)
                             )
                         }
                         Spacer(modifier = Modifier.height(10.dp))
@@ -159,7 +168,7 @@ fun OnboardingScreen(
                             },
                             label = { Text("Target Study Hours / Week") },
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(10.dp)
+                            shape = RoundedCornerShape(12.dp)
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
@@ -170,10 +179,11 @@ fun OnboardingScreen(
                     }
                 }
                 3 -> {
-                    AcademicCard {
+                    PremiumCard(contentPadding = 20.dp) {
                         Text(
                             text = "Ready to Launch Your Workspace",
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(10.dp))
                         Text(
@@ -184,7 +194,8 @@ fun OnboardingScreen(
                         Spacer(modifier = Modifier.height(14.dp))
                         Text(
                             text = "• 5 Pre-Enrolled Computer Science & Math modules\n• Integrated Room database with zero cloud bloat\n• Live Pomodoro timer and Pomodoro logs",
-                            style = MaterialTheme.typography.bodySmall
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                            color = EduTrackSuccess
                         )
                     }
                 }
@@ -199,9 +210,9 @@ fun OnboardingScreen(
                 if (state.currentStep > 1) {
                     OutlinedButton(
                         onClick = { viewModel.prevStep() },
-                        shape = RoundedCornerShape(10.dp)
+                        shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Back")
+                        Text("Back", fontWeight = FontWeight.SemiBold)
                     }
                 } else {
                     Spacer(modifier = Modifier.size(1.dp))
@@ -209,11 +220,14 @@ fun OnboardingScreen(
 
                 Button(
                     onClick = { viewModel.nextStep() },
-                    colors = ButtonDefaults.buttonColors(containerColor = AcademicIndigo),
-                    shape = RoundedCornerShape(10.dp)
+                    colors = ButtonDefaults.buttonColors(containerColor = EduTrackPrimary),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text(if (state.currentStep == 3) "Enter Workspace" else "Continue")
-                    Spacer(modifier = Modifier.size(4.dp))
+                    Text(
+                        text = if (state.currentStep == 3) "Enter Workspace" else "Continue",
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.size(6.dp))
                     Icon(Icons.Default.ArrowForward, contentDescription = null, modifier = Modifier.size(16.dp))
                 }
             }

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,27 +30,23 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.gtinnox.edutrack.ui.theme.AcademicAmber
-import com.gtinnox.edutrack.ui.theme.AcademicIndigo
-import com.gtinnox.edutrack.ui.theme.AcademicPurple
-import com.gtinnox.edutrack.ui.theme.AcademicRose
-import com.gtinnox.edutrack.ui.theme.AcademicSage
-import com.gtinnox.edutrack.ui.theme.AcademicSky
+import com.gtinnox.edutrack.ui.components.PremiumCard
+import com.gtinnox.edutrack.ui.theme.EduTrackPrimary
+import com.gtinnox.edutrack.ui.theme.EduTrackPrimarySoft
 import com.gtinnox.edutrack.ui.viewmodel.SubjectUiEvent
 import com.gtinnox.edutrack.ui.viewmodel.SubjectViewModel
 import kotlinx.coroutines.flow.collectLatest
@@ -68,7 +65,7 @@ fun AddEditSubjectScreen(
 
     var name by remember(existing) { mutableStateOf(existing?.name ?: "") }
     var code by remember(existing) { mutableStateOf(existing?.code ?: "") }
-    var color by remember(existing) { mutableStateOf(existing?.color ?: "#6477D9") }
+    var color by remember(existing) { mutableStateOf(existing?.color ?: "#615CE7") }
     var description by remember(existing) { mutableStateOf(existing?.description ?: "") }
     var semester by remember(existing) { mutableStateOf(existing?.semester ?: "Fall 2026") }
     var instructor by remember(existing) { mutableStateOf(existing?.instructor ?: "") }
@@ -88,177 +85,204 @@ fun AddEditSubjectScreen(
     }
 
     val palette = listOf(
-        "#6477D9", // Academic Indigo
-        "#16A37B", // Academic Sage
-        "#E6A23C", // Academic Amber
-        "#8E67E8", // Academic Purple
-        "#38BDF8", // Academic Sky
-        "#E06464"  // Academic Rose
+        "#615CE7", // Primary Lavender/Indigo
+        "#16A37B", // Mint / Sage
+        "#E6A23C", // Amber / Peach
+        "#8B85FF", // Soft Purple
+        "#38BDF8", // Sky
+        "#E06464"  // Rose
     )
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = Color.Transparent,
         modifier = modifier
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 20.dp)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Header
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onNavigateBack) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                 }
                 Text(
-                    text = if (existing == null) "Enroll Subject Course" else "Edit Subject",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    text = if (existing != null) "Edit Academic Subject" else "Enroll New Subject",
+                    style = MaterialTheme.typography.headlineLarge,
                     modifier = Modifier.weight(1f)
                 )
             }
 
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("Course Name *") },
-                placeholder = { Text("e.g. Distributed Computing Systems") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
-            )
+            // Subject Info Card
+            PremiumCard(contentPadding = 18.dp) {
+                Text(
+                    text = "Core Curriculum Details",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(14.dp))
 
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(
-                    value = code,
-                    onValueChange = { code = it },
-                    label = { Text("Code *") },
-                    placeholder = { Text("CS 310") },
-                    modifier = Modifier.weight(1f),
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Subject / Course Name *") },
+                    placeholder = { Text("e.g. Distributed Operating Systems") },
+                    modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
                 )
 
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedTextField(
+                        value = code,
+                        onValueChange = { code = it },
+                        label = { Text("Course Code *") },
+                        placeholder = { Text("CS 401") },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    OutlinedTextField(
+                        value = semester,
+                        onValueChange = { semester = it },
+                        label = { Text("Semester") },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
                 OutlinedTextField(
-                    value = semester,
-                    onValueChange = { semester = it },
-                    label = { Text("Semester") },
-                    placeholder = { Text("Fall 2026") },
-                    modifier = Modifier.weight(1f),
+                    value = instructor,
+                    onValueChange = { instructor = it },
+                    label = { Text("Professor / Instructor") },
+                    placeholder = { Text("e.g. Dr. Barbara Liskov") },
+                    modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Syllabus & Course Scope") },
+                    placeholder = { Text("Consensus algorithms, replication, raft...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    minLines = 2
                 )
             }
 
-            OutlinedTextField(
-                value = instructor,
-                onValueChange = { instructor = it },
-                label = { Text("Instructor / Professor") },
-                placeholder = { Text("Dr. Alan Turing") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedTextField(
-                    value = targetHoursText,
-                    onValueChange = { targetHoursText = it.filter { ch -> ch.isDigit() } },
-                    label = { Text("Weekly Goal (Hours) *") },
-                    placeholder = { Text("6") },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp)
+            // Visual Identity (Palette)
+            PremiumCard(contentPadding = 18.dp) {
+                Text(
+                    text = "Subject Color Identity",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface
                 )
+                Spacer(modifier = Modifier.height(12.dp))
 
-                OutlinedTextField(
-                    value = attendanceRateText,
-                    onValueChange = { attendanceRateText = it.filter { ch -> ch.isDigit() } },
-                    label = { Text("Attendance Rate (%)") },
-                    placeholder = { Text("95") },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp)
-                )
-            }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceAround
+                ) {
+                    palette.forEach { hex ->
+                        val swatchColor = Color(android.graphics.Color.parseColor(hex))
+                        val isSelected = color.equals(hex, ignoreCase = true)
 
-            OutlinedTextField(
-                value = description,
-                onValueChange = { description = it },
-                label = { Text("Syllabus & Course Scope") },
-                placeholder = { Text("Key topics, learning objectives, and lab components...") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(110.dp),
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            // Color Palette Selector
-            Text(
-                text = "Course Theme Accent",
-                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold)
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                palette.forEach { hex ->
-                    val c = Color(android.graphics.Color.parseColor(hex))
-                    val isSelected = color.equals(hex, ignoreCase = true)
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(c)
-                            .border(
-                                width = if (isSelected) 3.dp else 1.dp,
-                                color = if (isSelected) MaterialTheme.colorScheme.onSurface else Color.Transparent,
-                                shape = CircleShape
-                            )
-                            .clickable { color = hex },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (isSelected) {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = "Selected",
-                                tint = Color.White,
-                                modifier = Modifier.size(18.dp)
-                            )
+                        Box(
+                            modifier = Modifier
+                                .size(42.dp)
+                                .background(swatchColor, CircleShape)
+                                .clickable { color = hex }
+                                .border(
+                                    width = if (isSelected) 3.dp else 0.dp,
+                                    color = if (isSelected) MaterialTheme.colorScheme.onSurface else Color.Transparent,
+                                    shape = CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (isSelected) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = "Selected",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            // Target Study & Attendance
+            PremiumCard(contentPadding = 18.dp) {
+                Text(
+                    text = "Academic Targets",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(14.dp))
 
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedTextField(
+                        value = targetHoursText,
+                        onValueChange = { targetHoursText = it },
+                        label = { Text("Weekly Study Target (Hours)") },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+
+                    OutlinedTextField(
+                        value = attendanceRateText,
+                        onValueChange = { attendanceRateText = it },
+                        label = { Text("Attendance Target (%)") },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                }
+            }
+
+            // Save Action
             Button(
                 onClick = {
-                    val targetHours = targetHoursText.toIntOrNull() ?: 5
-                    val attendance = attendanceRateText.toIntOrNull() ?: 95
                     viewModel.saveSubject(
-                        id = existing?.id,
+                        id = subjectId,
                         name = name,
                         code = code,
                         color = color,
                         description = description,
                         semester = semester,
                         instructor = instructor,
-                        weeklyTargetHours = targetHours,
-                        attendanceRate = attendance
+                        weeklyTargetHours = targetHoursText.toIntOrNull() ?: 5,
+                        attendanceRate = attendanceRateText.toIntOrNull() ?: 95
                     )
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = AcademicIndigo),
-                shape = RoundedCornerShape(12.dp)
+                    .height(52.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = EduTrackPrimary)
             ) {
                 Text(
-                    text = if (existing == null) "Enroll Course Module" else "Save Changes",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                    text = if (existing != null) "Update Curriculum Subject" else "Enroll Subject",
+                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
                 )
             }
 
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(28.dp))
         }
     }
 }

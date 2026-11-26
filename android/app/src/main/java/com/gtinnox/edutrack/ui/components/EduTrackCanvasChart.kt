@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -32,6 +33,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gtinnox.edutrack.ui.theme.AcademicIndigo
 import com.gtinnox.edutrack.ui.theme.AcademicSage
+import com.gtinnox.edutrack.ui.theme.EduTrackPrimary
+import com.gtinnox.edutrack.ui.theme.EduTrackSuccess
 import com.gtinnox.edutrack.ui.viewmodel.DayTrend
 import com.gtinnox.edutrack.ui.viewmodel.SubjectStudyStat
 
@@ -41,15 +44,15 @@ fun MinimalStudyBarChart(
     targetMinutes: Int = 180,
     modifier: Modifier = Modifier
 ) {
-    val barColor = AcademicIndigo
-    val targetLineColor = AcademicSage.copy(alpha = 0.5f)
+    val barColor = EduTrackPrimary
+    val targetLineColor = EduTrackSuccess.copy(alpha = 0.5f)
     val maxMins = (trends.maxOfOrNull { it.studyMinutes } ?: 180).coerceAtLeast(targetMinutes).coerceAtLeast(1)
 
     Column(modifier = modifier.fillMaxWidth()) {
         Canvas(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(140.dp)
+                .height(150.dp)
                 .padding(vertical = 8.dp)
         ) {
             val canvasWidth = size.width
@@ -57,30 +60,39 @@ fun MinimalStudyBarChart(
             val barCount = trends.size
             if (barCount == 0) return@Canvas
 
-            val barWidth = (canvasWidth / (barCount * 2)).coerceIn(12f, 32f)
+            val barWidth = (canvasWidth / (barCount * 2)).coerceIn(14f, 34f)
             val spacing = (canvasWidth - (barWidth * barCount)) / (barCount + 1)
 
-            // Target line
+            // Target dashed/solid line
             val targetY = canvasHeight - ((targetMinutes.toFloat() / maxMins.toFloat()) * canvasHeight)
             drawLine(
                 color = targetLineColor,
                 start = Offset(0f, targetY),
                 end = Offset(canvasWidth, targetY),
-                strokeWidth = 2f,
+                strokeWidth = 2.dp.toPx(),
                 cap = StrokeCap.Round
             )
 
             trends.forEachIndexed { index, day ->
                 val x = spacing + index * (barWidth + spacing)
-                val heightFactor = (day.studyMinutes.toFloat() / maxMins.toFloat()).coerceIn(0.05f, 1f)
+                val heightFactor = (day.studyMinutes.toFloat() / maxMins.toFloat()).coerceIn(0.04f, 1f)
                 val barHeight = canvasHeight * heightFactor
                 val y = canvasHeight - barHeight
 
+                // Background track
                 drawRoundRect(
-                    color = if (day.studyMinutes >= targetMinutes) AcademicSage else barColor,
+                    color = barColor.copy(alpha = 0.1f),
+                    topLeft = Offset(x, 0f),
+                    size = Size(barWidth, canvasHeight),
+                    cornerRadius = CornerRadius(8f, 8f)
+                )
+
+                // Value bar
+                drawRoundRect(
+                    color = if (day.studyMinutes >= targetMinutes) EduTrackSuccess else barColor,
                     topLeft = Offset(x, y),
                     size = Size(barWidth, barHeight),
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(6f, 6f)
+                    cornerRadius = CornerRadius(8f, 8f)
                 )
             }
         }
@@ -93,7 +105,7 @@ fun MinimalStudyBarChart(
             trends.forEach {
                 Text(
                     text = it.dayLabel,
-                    style = MaterialTheme.typography.labelSmall,
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -108,7 +120,14 @@ fun MinimalSubjectDonutChart(
     modifier: Modifier = Modifier
 ) {
     if (stats.isEmpty()) {
-        Text("No study data logged yet", style = MaterialTheme.typography.bodyMedium)
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(vertical = 24.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("No study data logged yet", style = MaterialTheme.typography.bodyMedium)
+        }
         return
     }
 
@@ -119,19 +138,25 @@ fun MinimalSubjectDonutChart(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
-            modifier = Modifier.size(160.dp),
+            modifier = Modifier.size(170.dp),
             contentAlignment = Alignment.Center
         ) {
-            Canvas(modifier = Modifier.size(150.dp)) {
+            Canvas(modifier = Modifier.size(154.dp)) {
                 var startAngle = -90f
-                val stroke = Stroke(width = 24f, cap = StrokeCap.Round)
+                val stroke = Stroke(width = 24.dp.toPx(), cap = StrokeCap.Round)
+
+                // Background subtle ring
+                drawCircle(
+                    color = Color.LightGray.copy(alpha = 0.2f),
+                    style = stroke
+                )
 
                 stats.forEach { stat ->
                     val sweep = (stat.totalMinutes.toFloat() / totalMins.toFloat()) * 360f
                     val statColor = try {
                         Color(android.graphics.Color.parseColor(stat.color))
                     } catch (e: Exception) {
-                        AcademicIndigo
+                        EduTrackPrimary
                     }
 
                     if (sweep > 0f) {
@@ -149,12 +174,12 @@ fun MinimalSubjectDonutChart(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = "${totalMins / 60}h ${totalMins % 60}m",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "Total Study",
-                    style = MaterialTheme.typography.labelSmall,
+                    text = "Total Logged",
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -171,7 +196,7 @@ fun MinimalSubjectDonutChart(
                 val chipColor = try {
                     Color(android.graphics.Color.parseColor(stat.color))
                 } catch (e: Exception) {
-                    AcademicIndigo
+                    EduTrackPrimary
                 }
                 Row(
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -185,7 +210,7 @@ fun MinimalSubjectDonutChart(
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "${stat.subjectCode} (${stat.totalMinutes / 60}h)",
-                        style = MaterialTheme.typography.labelSmall,
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
@@ -204,7 +229,8 @@ fun FocusTrendChart(
     Canvas(
         modifier = modifier
             .fillMaxWidth()
-            .height(90.dp)
+            .height(100.dp)
+            .padding(vertical = 8.dp)
     ) {
         val width = size.width
         val height = size.height
@@ -220,7 +246,7 @@ fun FocusTrendChart(
 
         drawPath(
             path = path,
-            color = AcademicIndigo,
+            color = EduTrackPrimary,
             style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
         )
 
@@ -228,15 +254,45 @@ fun FocusTrendChart(
             val x = i * stepX
             val y = height - (score.toFloat() / maxScore * height)
             drawCircle(
-                color = AcademicIndigo,
-                radius = 4.dp.toPx(),
+                color = EduTrackPrimary,
+                radius = 5.dp.toPx(),
                 center = Offset(x, y)
             )
             drawCircle(
                 color = Color.White,
-                radius = 2.dp.toPx(),
+                radius = 2.5.dp.toPx(),
                 center = Offset(x, y)
             )
+        }
+    }
+}
+
+@Composable
+fun AcademicCalendarHeatmap(
+    days: List<Int>, // 0 = empty, 1 = low, 2 = medium, 3 = high
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        val weeks = days.chunked(7)
+        weeks.forEach { week ->
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                week.forEach { level ->
+                    val color = when (level) {
+                        3 -> EduTrackSuccess
+                        2 -> EduTrackSuccess.copy(alpha = 0.65f)
+                        1 -> EduTrackSuccess.copy(alpha = 0.3f)
+                        else -> MaterialTheme.colorScheme.surfaceVariant
+                    }
+                    Box(
+                        modifier = Modifier
+                            .size(16.dp)
+                            .background(color, RoundedCornerShape(4.dp))
+                    )
+                }
+            }
         }
     }
 }

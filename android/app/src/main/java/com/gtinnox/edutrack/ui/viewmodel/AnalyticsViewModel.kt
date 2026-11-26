@@ -29,7 +29,8 @@ data class AnalyticsUiState(
     val averageFocusScore: Int = 88,
     val totalSessionsCount: Int = 0,
     val subjectStats: List<SubjectStudyStat> = emptyList(),
-    val weeklyTrends: List<DayTrend> = emptyList()
+    val weeklyTrends: List<DayTrend> = emptyList(),
+    val focusTrendScores: List<Int> = emptyList()
 )
 
 class AnalyticsViewModel(
@@ -63,7 +64,6 @@ class AnalyticsViewModel(
         // Last 7 days trend
         val days = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
         val trends = days.mapIndexed { index, day ->
-            // Distribute sessions or provide representative day stat
             val dayMins = when (index) {
                 0 -> 120
                 1 -> 90
@@ -76,12 +76,19 @@ class AnalyticsViewModel(
             DayTrend(day, dayMins)
         }
 
+        val focusScores = if (sessions.isNotEmpty()) {
+            sessions.takeLast(7).map { it.focusScore }
+        } else {
+            listOf(80, 85, 90, 78, 92, 88, 95)
+        }
+
         AnalyticsUiState(
             totalStudyHours = totalHours.coerceAtLeast(14.5f),
             averageFocusScore = avgScore,
             totalSessionsCount = sessions.size.coerceAtLeast(4),
             subjectStats = stats,
-            weeklyTrends = trends
+            weeklyTrends = trends,
+            focusTrendScores = focusScores
         )
     }.stateIn(
         viewModelScope,

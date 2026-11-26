@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -19,12 +20,14 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -44,14 +47,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.gtinnox.edutrack.ui.components.AcademicCard
+import com.gtinnox.edutrack.ui.components.AcademicEmptyState
+import com.gtinnox.edutrack.ui.components.PremiumCard
 import com.gtinnox.edutrack.ui.components.SubjectChip
-import com.gtinnox.edutrack.ui.theme.AcademicAmber
-import com.gtinnox.edutrack.ui.theme.AcademicIndigo
-import com.gtinnox.edutrack.ui.theme.AcademicRose
-import com.gtinnox.edutrack.ui.theme.AcademicSage
+import com.gtinnox.edutrack.ui.theme.EduTrackDanger
+import com.gtinnox.edutrack.ui.theme.EduTrackPrimary
+import com.gtinnox.edutrack.ui.theme.EduTrackPrimarySoft
 import com.gtinnox.edutrack.ui.viewmodel.NoteViewModel
 import kotlinx.coroutines.flow.collectLatest
 
@@ -81,25 +85,35 @@ fun NotesScreen(
 
         AlertDialog(
             onDismissRequest = { showAddDialog = false },
-            title = { Text("Write Revision Note") },
+            title = {
+                Text(
+                    text = "New Academic Revision Note",
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                )
+            },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     OutlinedTextField(
                         value = title,
                         onValueChange = { title = it },
                         label = { Text("Note Title *") },
-                        placeholder = { Text("e.g. Master Theorem Formulas") },
+                        placeholder = { Text("e.g. Master Theorem & Complexity") },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp)
+                        shape = RoundedCornerShape(12.dp)
                     )
 
-                    Text("Subject Association", style = MaterialTheme.typography.labelSmall)
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        subjects.take(3).forEach { s ->
+                    Text("Subject Course", style = MaterialTheme.typography.labelSmall)
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        items(subjects) { s ->
                             FilterChip(
                                 selected = subjectId == s.id,
                                 onClick = { subjectId = s.id },
-                                label = { Text(s.code) }
+                                label = { Text(s.code.ifBlank { s.name }) },
+                                shape = RoundedCornerShape(8.dp),
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = EduTrackPrimarySoft,
+                                    selectedLabelColor = EduTrackPrimary
+                                )
                             )
                         }
                     }
@@ -108,38 +122,40 @@ fun NotesScreen(
                         value = tags,
                         onValueChange = { tags = it },
                         label = { Text("Tags (comma separated)") },
-                        placeholder = { Text("Algorithms, Formulas, Midterm") },
+                        placeholder = { Text("algorithms, asymptotic, revision") },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp)
+                        shape = RoundedCornerShape(12.dp)
                     )
 
                     OutlinedTextField(
                         value = content,
                         onValueChange = { content = it },
-                        label = { Text("Markdown / Text Content *") },
-                        placeholder = { Text("Key theorems, definitions, derivations...") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(140.dp),
-                        shape = RoundedCornerShape(10.dp)
+                        label = { Text("Note Content & Formulas") },
+                        placeholder = { Text("Record theorems, derivations, and bullet summaries...") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        minLines = 4
                     )
                 }
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        viewModel.saveNote(
-                            id = null,
-                            title = title,
-                            content = content,
-                            subjectId = subjectId,
-                            tags = tags
-                        )
-                        showAddDialog = false
+                        if (title.isNotBlank()) {
+                            viewModel.saveNote(
+                                id = null,
+                                title = title,
+                                content = content,
+                                subjectId = subjectId,
+                                tags = tags
+                            )
+                            showAddDialog = false
+                        }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = AcademicIndigo)
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = EduTrackPrimary)
                 ) {
-                    Text("Save Note")
+                    Text("Save Note", fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -152,152 +168,152 @@ fun NotesScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = Color.Transparent,
         modifier = modifier
     ) { padding ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "Revision Notes",
-                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "${notes.size} Academic Notes & Summaries",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+            // Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "Revision Notes",
+                        style = MaterialTheme.typography.headlineLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "${notes.size} Academic Summaries",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
 
-                    Button(
-                        onClick = { showAddDialog = true },
-                        colors = ButtonDefaults.buttonColors(containerColor = AcademicIndigo),
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("New Note")
-                    }
+                Button(
+                    onClick = { showAddDialog = true },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = EduTrackPrimary)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Add Note", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
                 }
             }
 
-            item {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { viewModel.setSearch(it) },
-                    placeholder = { Text("Search notes by title, formulas, or tags...") },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    singleLine = true
-                )
-            }
+            // Search Bar
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { viewModel.setSearch(it) },
+                placeholder = { Text("Search by title, formulas, or tags...") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                singleLine = true
+            )
 
             if (notes.isEmpty()) {
-                item {
-                    AcademicCard {
-                        Text(
-                            text = "No revision notes found matching your search.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
+                AcademicEmptyState(
+                    icon = Icons.Default.MenuBook,
+                    title = "No Revision Notes",
+                    description = if (searchQuery.isNotBlank()) "No notes match your query." else "Capture formulas, proofs, and concept summaries.",
+                    actionText = "Create Note",
+                    onActionClick = { showAddDialog = true }
+                )
             } else {
-                items(notes) { note ->
-                    val subject = subjects.find { it.id == note.subjectId }
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(notes) { note ->
+                        val sub = subjects.find { it.id == note.subjectId }
 
-                    AcademicCard {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                if (note.isPinned) {
-                                    Icon(
-                                        imageVector = Icons.Default.PushPin,
-                                        contentDescription = "Pinned",
-                                        tint = AcademicAmber,
-                                        modifier = Modifier.size(16.dp)
+                        PremiumCard(contentPadding = 16.dp) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                if (sub != null) {
+                                    SubjectChip(
+                                        name = sub.name.take(12),
+                                        code = sub.code,
+                                        colorHex = sub.color
                                     )
+                                } else {
+                                    Text("General", style = MaterialTheme.typography.labelSmall)
+                                }
+
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    IconButton(
+                                        onClick = { viewModel.togglePin(note) },
+                                        modifier = Modifier.size(24.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.PushPin,
+                                            contentDescription = "Pin",
+                                            tint = if (note.isPinned) EduTrackPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
                                     Spacer(modifier = Modifier.width(6.dp))
-                                }
-                                if (subject != null) {
-                                    SubjectChip(name = subject.name.take(12), code = subject.code, colorHex = subject.color)
-                                }
-                            }
-
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                IconButton(onClick = { viewModel.togglePin(note) }) {
-                                    Icon(
-                                        imageVector = Icons.Default.PushPin,
-                                        contentDescription = "Pin",
-                                        tint = if (note.isPinned) AcademicAmber else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-                                IconButton(onClick = { viewModel.toggleFavorite(note) }) {
-                                    Icon(
-                                        imageVector = if (note.isFavourite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                                        contentDescription = "Favorite",
-                                        tint = if (note.isFavourite) AcademicRose else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-                                IconButton(onClick = { viewModel.deleteNote(note) }) {
-                                    Icon(
-                                        imageVector = Icons.Default.Delete,
-                                        contentDescription = "Delete",
-                                        tint = AcademicRose,
-                                        modifier = Modifier.size(18.dp)
-                                    )
+                                    IconButton(
+                                        onClick = { viewModel.deleteNote(note) },
+                                        modifier = Modifier.size(24.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = "Delete",
+                                            tint = EduTrackDanger.copy(alpha = 0.7f),
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
                                 }
                             }
-                        }
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(10.dp))
 
-                        Text(
-                            text = note.title,
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+                            Text(
+                                text = note.title,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
 
-                        Spacer(modifier = Modifier.height(4.dp))
+                            if (note.content.isNotBlank()) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = note.content,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 3
+                                )
+                            }
 
-                        Text(
-                            text = note.content,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 4
-                        )
-
-                        if (note.tags.isNotBlank()) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                note.tags.split(",").forEach { tag ->
-                                    val trimmed = tag.trim()
-                                    if (trimmed.isNotBlank()) {
+                            if (note.tags.isNotBlank()) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    note.tags.split(",").map { it.trim() }.filter { it.isNotBlank() }.take(3).forEach { tag ->
                                         Surface(
                                             shape = RoundedCornerShape(6.dp),
-                                            color = AcademicIndigo.copy(alpha = 0.08f)
+                                            color = MaterialTheme.colorScheme.surfaceVariant
                                         ) {
                                             Text(
-                                                text = "#$trimmed",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = AcademicIndigo,
+                                                text = "#$tag",
+                                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                             )
                                         }
@@ -307,10 +323,6 @@ fun NotesScreen(
                         }
                     }
                 }
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(40.dp))
             }
         }
     }

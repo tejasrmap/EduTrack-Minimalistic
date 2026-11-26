@@ -42,11 +42,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.gtinnox.edutrack.ui.components.AcademicCard
-import com.gtinnox.edutrack.ui.theme.AcademicIndigo
-import com.gtinnox.edutrack.ui.theme.AcademicSage
+import com.gtinnox.edutrack.ui.components.PremiumCard
+import com.gtinnox.edutrack.ui.components.SectionHeader
+import com.gtinnox.edutrack.ui.theme.EduTrackPrimary
+import com.gtinnox.edutrack.ui.theme.EduTrackPrimarySoft
+import com.gtinnox.edutrack.ui.theme.EduTrackSuccess
 import com.gtinnox.edutrack.ui.viewmodel.ProfileViewModel
 import kotlinx.coroutines.flow.collectLatest
 
@@ -77,18 +80,22 @@ fun ProfileScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = Color.Transparent,
         modifier = modifier
     ) { padding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Header
             item {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onNavigateBack) {
@@ -96,64 +103,72 @@ fun ProfileScreen(
                     }
                     Text(
                         text = "Scholar Identity & Profile",
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        style = MaterialTheme.typography.headlineLarge,
                         modifier = Modifier.weight(1f)
                     )
                 }
             }
 
-            // Scholar Avatar Banner
+            // Scholar Avatar Hero Card
             item {
-                AcademicCard {
+                PremiumCard(contentPadding = 20.dp) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Surface(
-                            modifier = Modifier.size(54.dp),
+                            modifier = Modifier.size(68.dp),
                             shape = CircleShape,
-                            color = AcademicIndigo.copy(alpha = 0.15f)
+                            color = EduTrackPrimarySoft
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Text(
                                     text = profile?.avatar ?: "JV",
-                                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = AcademicIndigo
+                                    style = MaterialTheme.typography.headlineLarge.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = EduTrackPrimary
+                                    )
                                 )
                             }
                         }
+
                         Spacer(modifier = Modifier.width(16.dp))
-                        Column {
+
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = profile?.name ?: "Julian Vance",
-                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = profile?.university ?: "Institute of Technology",
-                                style = MaterialTheme.typography.bodySmall,
+                                text = profile?.program ?: "Computer Science & Engineering",
+                                style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                            Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = profile?.program ?: "Computer Science & Mathematics",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = AcademicIndigo
+                                text = "${profile?.university} · ${profile?.academicYear}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
                 }
             }
 
-            // One-Click Scholar Personas
+            // Fast Scholar Personas
             item {
-                Text(
-                    text = "One-Click Evaluation Personas",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                SectionHeader(
+                    title = "Pre-Configured Scholar Personas",
+                    badgeText = "${personas.size} Profiles"
                 )
             }
 
             items(personas) { persona ->
-                val isActive = profile?.name == persona.name
-                AcademicCard(
+                val isSelected = profile?.name == persona.name
+
+                PremiumCard(
+                    contentPadding = 14.dp,
                     onClick = { viewModel.applyPersona(persona) }
                 ) {
                     Row(
@@ -162,22 +177,27 @@ fun ProfileScreen(
                     ) {
                         Surface(
                             shape = CircleShape,
-                            color = if (isActive) AcademicSage.copy(alpha = 0.15f) else AcademicIndigo.copy(alpha = 0.1f),
-                            modifier = Modifier.size(38.dp)
+                            color = if (isSelected) EduTrackPrimarySoft else MaterialTheme.colorScheme.surfaceVariant,
+                            modifier = Modifier.size(40.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Text(
                                     text = persona.avatar,
-                                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                                    color = if (isActive) AcademicSage else AcademicIndigo
+                                    style = MaterialTheme.typography.titleSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isSelected) EduTrackPrimary else MaterialTheme.colorScheme.onSurface
+                                    )
                                 )
                             }
                         }
-                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Spacer(modifier = Modifier.width(14.dp))
+
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = persona.name,
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
                                 text = "${persona.program} · ${persona.university}",
@@ -185,102 +205,109 @@ fun ProfileScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        if (isActive) {
-                            Icon(Icons.Default.CheckCircle, contentDescription = "Active", tint = AcademicSage)
+
+                        if (isSelected) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = "Active",
+                                tint = EduTrackSuccess,
+                                modifier = Modifier.size(22.dp)
+                            )
                         }
                     }
                 }
             }
 
-            // Edit Profile Form
+            // Custom Scholar Details
             item {
-                AcademicCard {
-                    Text(
-                        text = "Custom Academic Information",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
+                SectionHeader(title = "Academic Program Details")
+                Spacer(modifier = Modifier.height(8.dp))
 
+                PremiumCard(contentPadding = 18.dp) {
                     OutlinedTextField(
                         value = name,
                         onValueChange = { name = it },
                         label = { Text("Full Name") },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp)
+                        shape = RoundedCornerShape(12.dp)
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     OutlinedTextField(
                         value = email,
                         onValueChange = { email = it },
                         label = { Text("University Email") },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp)
+                        shape = RoundedCornerShape(12.dp)
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     OutlinedTextField(
                         value = university,
                         onValueChange = { university = it },
                         label = { Text("Institution / University") },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp)
+                        shape = RoundedCornerShape(12.dp)
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     OutlinedTextField(
                         value = program,
                         onValueChange = { program = it },
-                        label = { Text("Degree & Major") },
+                        label = { Text("Degree / Major") },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp)
+                        shape = RoundedCornerShape(12.dp)
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         OutlinedTextField(
                             value = year,
                             onValueChange = { year = it },
                             label = { Text("Academic Year") },
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(10.dp)
+                            shape = RoundedCornerShape(12.dp)
                         )
                         OutlinedTextField(
                             value = semester,
                             onValueChange = { semester = it },
-                            label = { Text("Term") },
+                            label = { Text("Current Semester") },
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(10.dp)
+                            shape = RoundedCornerShape(12.dp)
                         )
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    OutlinedTextField(
-                        value = hoursText,
-                        onValueChange = { hoursText = it.filter { ch -> ch.isDigit() } },
-                        label = { Text("Target Study Hours / Week") },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp)
-                    )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Button(
                         onClick = {
-                            val hrs = hoursText.toIntOrNull() ?: 25
-                            viewModel.updateProfile(name, email, university, program, year, semester, hrs)
+                            viewModel.updateProfile(
+                                name = name,
+                                email = email,
+                                university = university,
+                                program = program,
+                                academicYear = year,
+                                semester = semester,
+                                preferredStudyHours = hoursText.toIntOrNull() ?: 25
+                            )
                         },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = AcademicIndigo),
-                        shape = RoundedCornerShape(10.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = EduTrackPrimary)
                     ) {
-                        Text("Save Profile Changes")
+                        Text("Save Scholar Profile", fontWeight = FontWeight.Bold)
                     }
                 }
             }
 
             item {
-                Spacer(modifier = Modifier.height(40.dp))
+                Spacer(modifier = Modifier.height(28.dp))
             }
         }
     }

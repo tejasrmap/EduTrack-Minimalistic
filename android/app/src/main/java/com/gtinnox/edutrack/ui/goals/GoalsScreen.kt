@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -30,6 +31,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -42,12 +44,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.gtinnox.edutrack.ui.components.AcademicCard
-import com.gtinnox.edutrack.ui.theme.AcademicIndigo
-import com.gtinnox.edutrack.ui.theme.AcademicRose
-import com.gtinnox.edutrack.ui.theme.AcademicSage
+import com.gtinnox.edutrack.ui.components.AcademicEmptyState
+import com.gtinnox.edutrack.ui.components.PremiumCard
+import com.gtinnox.edutrack.ui.theme.EduTrackDanger
+import com.gtinnox.edutrack.ui.theme.EduTrackPrimary
+import com.gtinnox.edutrack.ui.theme.EduTrackPrimarySoft
+import com.gtinnox.edutrack.ui.theme.EduTrackSuccess
 import com.gtinnox.edutrack.ui.viewmodel.GoalViewModel
 import kotlinx.coroutines.flow.collectLatest
 import java.time.LocalDate
@@ -76,7 +81,12 @@ fun GoalsScreen(
 
         AlertDialog(
             onDismissRequest = { showAddDialog = false },
-            title = { Text("Set Academic Milestone Target") },
+            title = {
+                Text(
+                    text = "Set Academic Milestone Target",
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                )
+            },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     OutlinedTextField(
@@ -85,7 +95,7 @@ fun GoalsScreen(
                         label = { Text("Target Description *") },
                         placeholder = { Text("e.g. Complete 25 Study Hours This Week") },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp)
+                        shape = RoundedCornerShape(12.dp)
                     )
 
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -94,46 +104,46 @@ fun GoalsScreen(
                             onValueChange = { targetValText = it },
                             label = { Text("Target Quota") },
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(10.dp)
+                            shape = RoundedCornerShape(12.dp)
                         )
                         OutlinedTextField(
                             value = unit,
                             onValueChange = { unit = it },
                             label = { Text("Unit") },
-                            placeholder = { Text("hours / sessions") },
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(10.dp)
+                            shape = RoundedCornerShape(12.dp)
                         )
                     }
 
                     OutlinedTextField(
                         value = targetDate,
                         onValueChange = { targetDate = it },
-                        label = { Text("Deadline Date (YYYY-MM-DD)") },
+                        label = { Text("Target Date (YYYY-MM-DD)") },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp)
+                        shape = RoundedCornerShape(12.dp)
                     )
                 }
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        val tVal = targetValText.toDoubleOrNull() ?: 25.0
-                        val cVal = currentValText.toDoubleOrNull() ?: 0.0
-                        viewModel.saveGoal(
-                            id = null,
-                            title = title,
-                            type = "weekly_study",
-                            targetValue = tVal,
-                            currentValue = cVal,
-                            unit = unit,
-                            targetDate = targetDate
-                        )
-                        showAddDialog = false
+                        if (title.isNotBlank()) {
+                            viewModel.saveGoal(
+                                id = null,
+                                title = title,
+                                type = "weekly_hours",
+                                targetValue = targetValText.toDoubleOrNull() ?: 25.0,
+                                currentValue = currentValText.toDoubleOrNull() ?: 0.0,
+                                unit = unit,
+                                targetDate = targetDate
+                            )
+                            showAddDialog = false
+                        }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = AcademicIndigo)
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = EduTrackPrimary)
                 ) {
-                    Text("Create Target")
+                    Text("Save Target", fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -146,129 +156,152 @@ fun GoalsScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = Color.Transparent,
         modifier = modifier
     ) { padding ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "Milestones & Targets",
-                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "${goals.size} Active Study Quotas",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+            // Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "Milestones & Quotas",
+                        style = MaterialTheme.typography.headlineLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "${goals.count { !it.isCompleted }} Active Milestone Targets",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
 
-                    Button(
-                        onClick = { showAddDialog = true },
-                        colors = ButtonDefaults.buttonColors(containerColor = AcademicIndigo),
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Add Target")
-                    }
+                Button(
+                    onClick = { showAddDialog = true },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = EduTrackPrimary)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("New Goal", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
                 }
             }
 
             if (goals.isEmpty()) {
-                item {
-                    AcademicCard {
-                        Text(
-                            text = "No study targets configured. Create milestone goals to push your weekly study hours.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
+                AcademicEmptyState(
+                    icon = Icons.Default.Flag,
+                    title = "No Milestone Targets",
+                    description = "Set weekly study quotas, assignment milestones, or revision goals.",
+                    actionText = "Create Goal",
+                    onActionClick = { showAddDialog = true }
+                )
             } else {
-                items(goals) { goal ->
-                    val progress = if (goal.targetValue > 0) {
-                        (goal.currentValue / goal.targetValue).toFloat().coerceIn(0f, 1f)
-                    } else 0f
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(goals) { goal ->
+                        val progress = if (goal.targetValue > 0) {
+                            (goal.currentValue / goal.targetValue).toFloat().coerceIn(0f, 1f)
+                        } else 0f
 
-                    AcademicCard {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = if (goal.isCompleted) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
-                                contentDescription = "Toggle",
-                                tint = if (goal.isCompleted) AcademicSage else AcademicIndigo,
-                                modifier = Modifier
-                                    .size(24.dp)
-                                    .clickable { viewModel.toggleGoal(goal) }
-                            )
-
-                            Spacer(modifier = Modifier.width(12.dp))
-
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = goal.title,
-                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Text(
-                                    text = "Target Date: ${goal.targetDate}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-
-                                Spacer(modifier = Modifier.height(8.dp))
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
+                        PremiumCard(contentPadding = 16.dp) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                IconButton(
+                                    onClick = { viewModel.toggleGoal(goal) },
+                                    modifier = Modifier.size(24.dp)
                                 ) {
-                                    Text(
-                                        text = "${goal.currentValue} / ${goal.targetValue} ${goal.unit}",
-                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                        color = AcademicIndigo
-                                    )
-                                    Text(
-                                        text = "${(progress * 100).toInt()}%",
-                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                        color = AcademicSage
+                                    Icon(
+                                        imageVector = if (goal.isCompleted) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+                                        contentDescription = "Toggle",
+                                        tint = if (goal.isCompleted) EduTrackSuccess else MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
 
-                                Spacer(modifier = Modifier.height(4.dp))
-                                LinearProgressIndicator(
-                                    progress = { progress },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(6.dp)
-                                        .clip(RoundedCornerShape(3.dp)),
-                                    color = if (goal.isCompleted) AcademicSage else AcademicIndigo
+                                Spacer(modifier = Modifier.width(12.dp))
+
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = goal.title,
+                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                        color = if (goal.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = "Target Date: ${goal.targetDate}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+
+                                Button(
+                                    onClick = { viewModel.incrementProgress(goal, 1.0) },
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = EduTrackPrimarySoft),
+                                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                                ) {
+                                    Text("+1", color = EduTrackPrimary, fontWeight = FontWeight.Bold)
+                                }
+
+                                Spacer(modifier = Modifier.width(6.dp))
+
+                                IconButton(
+                                    onClick = { viewModel.deleteGoal(goal) },
+                                    modifier = Modifier.size(24.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Delete",
+                                        tint = EduTrackDanger.copy(alpha = 0.7f),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "${goal.currentValue.toInt()} / ${goal.targetValue.toInt()} ${goal.unit}",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold)
+                                )
+                                Text(
+                                    text = "${(progress * 100).toInt()}%",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (progress >= 1f) EduTrackSuccess else EduTrackPrimary
+                                    )
                                 )
                             }
 
-                            IconButton(onClick = { viewModel.deleteGoal(goal) }) {
-                                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = AcademicRose, modifier = Modifier.size(18.dp))
-                            }
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            LinearProgressIndicator(
+                                progress = { progress },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(8.dp)
+                                    .clip(RoundedCornerShape(4.dp)),
+                                color = if (progress >= 1f) EduTrackSuccess else EduTrackPrimary,
+                                trackColor = EduTrackPrimarySoft
+                            )
                         }
                     }
                 }
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(40.dp))
             }
         }
     }

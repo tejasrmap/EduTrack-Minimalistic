@@ -1,6 +1,7 @@
 package com.gtinnox.edutrack.ui.examinations
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -21,6 +23,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -40,15 +43,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.gtinnox.edutrack.ui.components.AcademicCard
+import androidx.compose.ui.unit.sp
+import com.gtinnox.edutrack.ui.components.AcademicEmptyState
+import com.gtinnox.edutrack.ui.components.PremiumCard
 import com.gtinnox.edutrack.ui.components.SubjectChip
-import com.gtinnox.edutrack.ui.theme.AcademicAmber
-import com.gtinnox.edutrack.ui.theme.AcademicIndigo
-import com.gtinnox.edutrack.ui.theme.AcademicPurple
-import com.gtinnox.edutrack.ui.theme.AcademicRose
-import com.gtinnox.edutrack.ui.theme.AcademicSage
+import com.gtinnox.edutrack.ui.theme.EduTrackDanger
+import com.gtinnox.edutrack.ui.theme.EduTrackPrimary
+import com.gtinnox.edutrack.ui.theme.EduTrackPrimarySoft
+import com.gtinnox.edutrack.ui.theme.EduTrackSuccess
+import com.gtinnox.edutrack.ui.theme.EduTrackWarning
 import com.gtinnox.edutrack.ui.viewmodel.ExamViewModel
 import kotlinx.coroutines.flow.collectLatest
 import java.time.LocalDate
@@ -81,25 +87,35 @@ fun ExaminationsScreen(
 
         AlertDialog(
             onDismissRequest = { showAddDialog = false },
-            title = { Text("Register Examination") },
+            title = {
+                Text(
+                    text = "Register Examination",
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                )
+            },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     OutlinedTextField(
                         value = title,
                         onValueChange = { title = it },
                         label = { Text("Exam Name *") },
-                        placeholder = { Text("e.g. Algorithms Midterm") },
+                        placeholder = { Text("e.g. Distributed Systems Midterm") },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp)
+                        shape = RoundedCornerShape(12.dp)
                     )
 
                     Text("Subject *", style = MaterialTheme.typography.labelSmall)
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        subjects.take(4).forEach { s ->
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        items(subjects) { s ->
                             FilterChip(
                                 selected = subjectId == s.id,
                                 onClick = { subjectId = s.id },
-                                label = { Text(s.name) }
+                                label = { Text(s.code.ifBlank { s.name }) },
+                                shape = RoundedCornerShape(8.dp),
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = EduTrackPrimarySoft,
+                                    selectedLabelColor = EduTrackPrimary
+                                )
                             )
                         }
                     }
@@ -110,14 +126,14 @@ fun ExaminationsScreen(
                             onValueChange = { examDate = it },
                             label = { Text("Date (YYYY-MM-DD)") },
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(10.dp)
+                            shape = RoundedCornerShape(12.dp)
                         )
                         OutlinedTextField(
                             value = examTime,
                             onValueChange = { examTime = it },
                             label = { Text("Time") },
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(10.dp)
+                            shape = RoundedCornerShape(12.dp)
                         )
                     }
 
@@ -125,46 +141,50 @@ fun ExaminationsScreen(
                         OutlinedTextField(
                             value = location,
                             onValueChange = { location = it },
-                            label = { Text("Location") },
-                            modifier = Modifier.weight(1.5f),
-                            shape = RoundedCornerShape(10.dp)
+                            label = { Text("Hall / Room") },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp)
                         )
                         OutlinedTextField(
                             value = targetGrade,
                             onValueChange = { targetGrade = it },
-                            label = { Text("Target") },
+                            label = { Text("Target Grade") },
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(10.dp)
+                            shape = RoundedCornerShape(12.dp)
                         )
                     }
 
                     OutlinedTextField(
                         value = notes,
                         onValueChange = { notes = it },
-                        label = { Text("Exam Focus & Notes") },
+                        label = { Text("Exam Scope / Topics") },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp)
+                        shape = RoundedCornerShape(12.dp),
+                        minLines = 2
                     )
                 }
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        viewModel.saveExam(
-                            id = null,
-                            title = title,
-                            subjectId = subjectId,
-                            examDate = examDate,
-                            examTime = examTime,
-                            location = location,
-                            targetGrade = targetGrade,
-                            notes = notes
-                        )
-                        showAddDialog = false
+                        if (title.isNotBlank()) {
+                            viewModel.saveExam(
+                                id = null,
+                                title = title,
+                                subjectId = subjectId,
+                                examDate = examDate,
+                                examTime = examTime,
+                                location = location,
+                                targetGrade = targetGrade,
+                                notes = notes
+                            )
+                            showAddDialog = false
+                        }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = AcademicIndigo)
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = EduTrackPrimary)
                 ) {
-                    Text("Register Exam")
+                    Text("Register Exam", fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -177,137 +197,154 @@ fun ExaminationsScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = Color.Transparent,
         modifier = modifier
     ) { padding ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "Examination Portal",
-                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "${examsWithCountdown.size} Upcoming Academic Assessments",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+            // Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "Examinations Portal",
+                        style = MaterialTheme.typography.headlineLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "${examsWithCountdown.size} Upcoming Midterms & Finals",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
 
-                    Button(
-                        onClick = { showAddDialog = true },
-                        colors = ButtonDefaults.buttonColors(containerColor = AcademicIndigo),
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Add Exam")
-                    }
+                Button(
+                    onClick = { showAddDialog = true },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = EduTrackPrimary)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Register Exam", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
                 }
             }
 
             if (examsWithCountdown.isEmpty()) {
-                item {
-                    AcademicCard {
-                        Text(
-                            text = "No examinations registered. Add midterms, quizzes, and finals to start revision countdowns.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
+                AcademicEmptyState(
+                    icon = Icons.Default.School,
+                    title = "No Examinations Scheduled",
+                    description = "No midterms or final assessments are currently registered.",
+                    actionText = "Register Examination",
+                    onActionClick = { showAddDialog = true }
+                )
             } else {
-                items(examsWithCountdown) { item ->
-                    val exam = item.exam
-                    val subject = item.subject
-                    val days = item.daysRemaining
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(examsWithCountdown) { examItem ->
+                        val exam = examItem.exam
+                        val daysRemaining = examItem.daysRemaining
+                        val sub = subjects.find { it.id == exam.subjectId }
 
-                    val countdownColor = when {
-                        days <= 3 -> AcademicRose
-                        days <= 7 -> AcademicAmber
-                        else -> AcademicIndigo
-                    }
-
-                    AcademicCard {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            if (subject != null) {
-                                SubjectChip(name = subject.name, code = subject.code, colorHex = subject.color)
-                            }
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = countdownColor.copy(alpha = 0.12f)
+                        PremiumCard(contentPadding = 16.dp) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    text = if (days >= 0) "$days Days Remaining" else "Completed",
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                    color = countdownColor,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                )
-                            }
-                        }
+                                Surface(
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = if (daysRemaining <= 3) EduTrackDanger.copy(alpha = 0.12f) else EduTrackPrimarySoft,
+                                    modifier = Modifier.size(52.dp)
+                                ) {
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        Text(
+                                            text = "$daysRemaining",
+                                            style = MaterialTheme.typography.titleLarge.copy(
+                                                fontWeight = FontWeight.ExtraBold,
+                                                color = if (daysRemaining <= 3) EduTrackDanger else EduTrackPrimary
+                                            )
+                                        )
+                                        Text(
+                                            text = "DAYS",
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (daysRemaining <= 3) EduTrackDanger else EduTrackPrimary
+                                            )
+                                        )
+                                    }
+                                }
 
-                        Spacer(modifier = Modifier.height(10.dp))
+                                Spacer(modifier = Modifier.width(14.dp))
 
-                        Text(
-                            text = exam.title,
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            text = exam.title,
+                                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        if (sub != null) {
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            SubjectChip(
+                                                name = sub.name.take(10),
+                                                code = sub.code,
+                                                colorHex = sub.color
+                                            )
+                                        }
+                                    }
 
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "📍 ${exam.location} · ⏰ ${exam.examDate} at ${exam.examTime}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = "${exam.examDate} @ ${exam.examTime} · ${exam.location}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
 
-                        if (exam.notes.isNotBlank()) {
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = "Focus: ${exam.notes}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = EduTrackSuccess.copy(alpha = 0.12f)
+                                ) {
+                                    Text(
+                                        text = "Target: ${exam.targetGrade}",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            color = EduTrackSuccess
+                                        ),
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    )
+                                }
 
-                        Spacer(modifier = Modifier.height(10.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Target Grade: ${exam.targetGrade}",
-                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                                color = AcademicSage
-                            )
-
-                            IconButton(onClick = { viewModel.deleteExam(exam) }) {
-                                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = AcademicRose, modifier = Modifier.size(18.dp))
+                                IconButton(
+                                    onClick = { viewModel.deleteExam(exam) },
+                                    modifier = Modifier.size(24.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Delete",
+                                        tint = EduTrackDanger.copy(alpha = 0.7f),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
                             }
                         }
                     }
                 }
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(40.dp))
             }
         }
     }

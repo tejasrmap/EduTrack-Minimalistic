@@ -63,6 +63,18 @@ class GoalViewModel(
         }
     }
 
+    fun incrementProgress(goal: GoalEntity, delta: Double = 1.0) {
+        viewModelScope.launch {
+            val newVal = goal.currentValue + delta
+            val updated = goal.copy(
+                currentValue = newVal,
+                isCompleted = newVal >= goal.targetValue
+            )
+            repository.updateGoal(updated)
+            _eventFlow.emit("Progress updated (+${delta.toInt()} ${goal.unit})")
+        }
+    }
+
     fun toggleGoal(goal: GoalEntity) {
         viewModelScope.launch {
             repository.toggleGoalCompleted(goal)
