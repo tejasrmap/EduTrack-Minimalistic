@@ -137,4 +137,23 @@
 | **F. Validation** | Required fields checking, non-zero numeric validation, duration boundaries, and user-facing error snackbars | Verified |
 | **G. User feedback** | Native `SnackbarHost`, `AlertDialog` confirmation dialogs on deletion, and status chip feedback | Verified |
 | **H. Persistent Room DB** | SQLite Room Database (`edutrack_minimal_academic.db`) persisting data across reboots with initial curriculum seeding | Verified |
-| **I. Visual statistics & charts** | 100% Native Jetpack Compose `Canvas` charts: `MinimalStudyBarChart`, `MinimalSubjectDonutChart`, `FocusTrendChart` | Verified |
+| **I. Visual statistics & charts** | 100% Native Jetpack Compose `Canvas` charts: `MinimalStudyBarChart`, `MinimalSubjectDonutChart`, `FocusTrendChart`, `SoftAcademiaWeeklyActivity` | Verified |
+
+---
+
+## 5. Soft Academia Visual Redesign V3 (Design Version 2.1)
+
+### Visual Philosophy & Direction
+Completely eliminated generic Material 3 boxes, congested card grids, and purple gradients in favor of an organic, calm, academic editorial aesthetic:
+- **Palette**: Warm Ivory (`#F7F6F2`), Primary Forest (`#355B48`), Deep Forest (`#243D30`), Soft Sage (`#DCE8DD`), Muted Sage (`#E8EEE6`), Sand (`#E9E3D6`), Soft Terracotta (`#F0E0D5`), Dusty Lilac (`#E8E5EF`). Dark mode: Deep Obsidian Forest (`#171A18`, `#222723`, `#2B312C`).
+- **Organic Shapes & Hierarchy**: Structural containers 28-32dp, primary cards 22-24dp, list rows 18-20dp, chips & pills 12-14dp.
+- **Editorial Typography**: 30-34sp greetings, 28sp titles, 20sp section headings directly on background with generous 28-36dp vertical whitespace.
+- **Unboxed Layouts**: Headers, daily timelines, and weekly activity charts sit directly on the Warm Ivory surface without unnecessary card wrappers.
+- **Redesigned Screens**:
+  - `DashboardScreen`: Unboxed greeting, single `SoftSageFocusSummary` surface with streak pill & start focus CTA, canvas 7-day activity bars directly on background, vertical clean rows for continuing courses and agenda.
+  - `TimerScreen`: Meditative focus ring in Primary Forest and Soft Sage, tabular countdown digits, 26dp mode selector pills, integrated session reflection and subject selector.
+  - `SubjectsScreen` & `SubjectDetailScreen`: Library-style course list with weekly progress meters and clean instructor tags; organic hero overview card with direct focus session launcher.
+  - `PlannerScreen`: 14-day horizontal agenda selector with Primary Forest active pill, clean vertical schedule blocks with hairline dividers and completion toggles.
+  - `AssignmentsScreen`, `ExaminationsScreen`, `GoalsScreen`: Clean status tabs, countdown badges in Soft Sage and Terracotta, progress indicators in Forest Green.
+  - `NotesScreen`, `HistoryScreen`, `AnalyticsScreen`, `MoreMenuScreen`, `ProfileScreen`, `SettingsScreen`: Spacious organic cards, earth-tone category tags, and Canvas charts.
+- **Verification**: All unit tests pass (`5/5 passed`), build successful (`BUILD SUCCESSFUL in 22s`), verified debug APK generated at `apk/EduTrack-Minimal-Native.apk`.

@@ -7,83 +7,83 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 // ==========================================
-// EduTrack 2.0 Typography Hierarchy
+// Soft Academia Typography Hierarchy
 // ==========================================
 val EduTrackTypography = Typography(
-    // Large Greeting (28-32sp, semibold/bold)
+    // Greeting (30-34sp)
     displayMedium = TextStyle(
         fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Bold,
-        fontSize = 30.sp,
-        lineHeight = 36.sp,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 32.sp,
+        lineHeight = 38.sp,
         letterSpacing = (-0.5).sp
     ),
-    // Screen Title (26-30sp, semibold)
+    // Screen Titles (27-30sp)
     headlineLarge = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 26.sp,
-        lineHeight = 32.sp,
-        letterSpacing = (-0.25).sp
+        fontSize = 28.sp,
+        lineHeight = 34.sp,
+        letterSpacing = (-0.3).sp
     ),
-    // Section Heading (18-21sp, semibold)
+    // Section Titles (20-22sp)
     headlineMedium = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 20.sp,
-        lineHeight = 26.sp
+        fontSize = 21.sp,
+        lineHeight = 27.sp,
+        letterSpacing = (-0.2).sp
     ),
-    // Card Heading (15-17sp, medium/semibold)
+    // Card Titles (16-18sp)
     titleLarge = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.SemiBold,
         fontSize = 17.sp,
-        lineHeight = 22.sp
+        lineHeight = 23.sp
     ),
     titleMedium = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Medium,
-        fontSize = 15.sp,
-        lineHeight = 20.sp
+        fontSize = 16.sp,
+        lineHeight = 22.sp
     ),
-    // Body Primary (14-16sp)
+    // Body (15-16sp)
     bodyLarge = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Normal,
         fontSize = 15.sp,
         lineHeight = 22.sp
     ),
-    // Body Secondary (12-14sp)
+    // Secondary (13-14sp)
     bodyMedium = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Normal,
-        fontSize = 13.sp,
-        lineHeight = 19.sp
+        fontSize = 14.sp,
+        lineHeight = 20.sp
     ),
     bodySmall = TextStyle(
+        fontFamily = FontFamily.SansSerif,
+        fontWeight = FontWeight.Normal,
+        fontSize = 13.sp,
+        lineHeight = 18.sp
+    ),
+    // Metadata (12sp minimum)
+    labelLarge = TextStyle(
+        fontFamily = FontFamily.SansSerif,
+        fontWeight = FontWeight.Medium,
+        fontSize = 13.sp,
+        lineHeight = 17.sp
+    ),
+    labelMedium = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Normal,
         fontSize = 12.sp,
         lineHeight = 16.sp
     ),
-    // Label & Metadata (11-12sp, medium/semibold)
-    labelLarge = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 12.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.2.sp
-    ),
-    labelMedium = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Medium,
-        fontSize = 11.sp,
-        lineHeight = 15.sp
-    ),
     labelSmall = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Normal,
-        fontSize = 10.sp,
-        lineHeight = 14.sp
+        fontSize = 12.sp,
+        lineHeight = 16.sp
     )
 )

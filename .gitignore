@@ -39,6 +39,7 @@ Thumbs.db
 
 # Android build outputs & local config (handled in android/.gitignore as well)
 android/.gradle/
+android/.kotlin/
 android/build/
 android/app/build/
 android/local.properties

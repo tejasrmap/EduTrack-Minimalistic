@@ -27,10 +27,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -44,9 +44,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.gtinnox.edutrack.ui.components.PremiumCard
-import com.gtinnox.edutrack.ui.theme.EduTrackPrimary
-import com.gtinnox.edutrack.ui.theme.EduTrackPrimarySoft
+import androidx.compose.ui.unit.sp
+import com.gtinnox.edutrack.ui.components.OrganicCard
+import com.gtinnox.edutrack.ui.theme.PrimaryForest
+import com.gtinnox.edutrack.ui.theme.SoftSage
 import com.gtinnox.edutrack.ui.viewmodel.SubjectUiEvent
 import com.gtinnox.edutrack.ui.viewmodel.SubjectViewModel
 import kotlinx.coroutines.flow.collectLatest
@@ -65,7 +66,7 @@ fun AddEditSubjectScreen(
 
     var name by remember(existing) { mutableStateOf(existing?.name ?: "") }
     var code by remember(existing) { mutableStateOf(existing?.code ?: "") }
-    var color by remember(existing) { mutableStateOf(existing?.color ?: "#615CE7") }
+    var color by remember(existing) { mutableStateOf(existing?.color ?: "#355B48") }
     var description by remember(existing) { mutableStateOf(existing?.description ?: "") }
     var semester by remember(existing) { mutableStateOf(existing?.semester ?: "Fall 2026") }
     var instructor by remember(existing) { mutableStateOf(existing?.instructor ?: "") }
@@ -84,13 +85,14 @@ fun AddEditSubjectScreen(
         }
     }
 
+    // Soft Academia Earth-tone Swatches
     val palette = listOf(
-        "#615CE7", // Primary Lavender/Indigo
-        "#16A37B", // Mint / Sage
-        "#E6A23C", // Amber / Peach
-        "#8B85FF", // Soft Purple
-        "#38BDF8", // Sky
-        "#E06464"  // Rose
+        "#355B48", // Forest Green
+        "#5B7C69", // Deep Sage
+        "#8EA695", // Soft Sage
+        "#C48B71", // Soft Terracotta
+        "#938AA9", // Dusty Lilac
+        "#B89B72"  // Warm Sand
     )
 
     Scaffold(
@@ -102,11 +104,11 @@ fun AddEditSubjectScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 20.dp)
+                .padding(horizontal = 22.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Header
+            // Header directly on background
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -114,17 +116,34 @@ fun AddEditSubjectScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onNavigateBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
                 }
-                Text(
-                    text = if (existing != null) "Edit Academic Subject" else "Enroll New Subject",
-                    style = MaterialTheme.typography.headlineLarge,
-                    modifier = Modifier.weight(1f)
-                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "MODULE MANAGEMENT",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            letterSpacing = 1.5.sp,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = if (existing != null) "Edit Academic Module" else "Enroll New Module",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
             }
 
             // Subject Info Card
-            PremiumCard(contentPadding = 18.dp) {
+            OrganicCard(
+                cornerRadius = 24.dp,
+                contentPadding = 20.dp
+            ) {
                 Text(
                     text = "Core Curriculum Details",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
@@ -138,7 +157,11 @@ fun AddEditSubjectScreen(
                     label = { Text("Subject / Course Name *") },
                     placeholder = { Text("e.g. Distributed Operating Systems") },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = PrimaryForest,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -150,14 +173,22 @@ fun AddEditSubjectScreen(
                         label = { Text("Course Code *") },
                         placeholder = { Text("CS 401") },
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(16.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = PrimaryForest,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        )
                     )
                     OutlinedTextField(
                         value = semester,
                         onValueChange = { semester = it },
                         label = { Text("Semester") },
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(16.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = PrimaryForest,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        )
                     )
                 }
 
@@ -169,7 +200,11 @@ fun AddEditSubjectScreen(
                     label = { Text("Professor / Instructor") },
                     placeholder = { Text("e.g. Dr. Barbara Liskov") },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = PrimaryForest,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -180,15 +215,22 @@ fun AddEditSubjectScreen(
                     label = { Text("Syllabus & Course Scope") },
                     placeholder = { Text("Consensus algorithms, replication, raft...") },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = PrimaryForest,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    ),
                     minLines = 2
                 )
             }
 
             // Visual Identity (Palette)
-            PremiumCard(contentPadding = 18.dp) {
+            OrganicCard(
+                cornerRadius = 24.dp,
+                contentPadding = 20.dp
+            ) {
                 Text(
-                    text = "Subject Color Identity",
+                    text = "Module Palette Swatch",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -228,9 +270,12 @@ fun AddEditSubjectScreen(
             }
 
             // Target Study & Attendance
-            PremiumCard(contentPadding = 18.dp) {
+            OrganicCard(
+                cornerRadius = 24.dp,
+                contentPadding = 20.dp
+            ) {
                 Text(
-                    text = "Academic Targets",
+                    text = "Academic Commitments",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -240,9 +285,13 @@ fun AddEditSubjectScreen(
                     OutlinedTextField(
                         value = targetHoursText,
                         onValueChange = { targetHoursText = it },
-                        label = { Text("Weekly Study Target (Hours)") },
+                        label = { Text("Weekly Study (Hours)") },
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(16.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = PrimaryForest,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        )
                     )
 
                     OutlinedTextField(
@@ -250,7 +299,11 @@ fun AddEditSubjectScreen(
                         onValueChange = { attendanceRateText = it },
                         label = { Text("Attendance Target (%)") },
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(16.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = PrimaryForest,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        )
                     )
                 }
             }
@@ -273,11 +326,12 @@ fun AddEditSubjectScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = EduTrackPrimary)
+                shape = RoundedCornerShape(18.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryForest),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
             ) {
                 Text(
-                    text = if (existing != null) "Update Curriculum Subject" else "Enroll Subject",
+                    text = if (existing != null) "Update Module Details" else "Confirm & Enroll Module",
                     style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
                 )
             }

@@ -17,7 +17,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChip
@@ -26,6 +25,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -46,11 +46,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.gtinnox.edutrack.ui.components.PremiumCard
-import com.gtinnox.edutrack.ui.components.SubjectChip
-import com.gtinnox.edutrack.ui.theme.EduTrackPrimary
-import com.gtinnox.edutrack.ui.theme.EduTrackPrimarySoft
-import com.gtinnox.edutrack.ui.theme.EduTrackSuccess
+import androidx.compose.ui.unit.sp
+import com.gtinnox.edutrack.ui.components.OrganicCard
+import com.gtinnox.edutrack.ui.theme.PrimaryForest
+import com.gtinnox.edutrack.ui.theme.SoftSage
+import com.gtinnox.edutrack.ui.theme.SoftSuccess
 import com.gtinnox.edutrack.ui.viewmodel.SessionUiEvent
 import com.gtinnox.edutrack.ui.viewmodel.SessionViewModel
 import com.gtinnox.edutrack.ui.viewmodel.SubjectViewModel
@@ -111,11 +111,11 @@ fun AddEditSessionScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 20.dp)
+                .padding(horizontal = 22.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Header
+            // Header directly on background
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -123,17 +123,34 @@ fun AddEditSessionScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onNavigateBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
                 }
-                Text(
-                    text = if (existing != null) "Edit Study Session" else "Log Study Session",
-                    style = MaterialTheme.typography.headlineLarge,
-                    modifier = Modifier.weight(1f)
-                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "FOCUS RECORD LOG",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            letterSpacing = 1.5.sp,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = if (existing != null) "Edit Study Session" else "Log Study Session",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
             }
 
             // Subject Selector Card
-            PremiumCard(contentPadding = 18.dp) {
+            OrganicCard(
+                cornerRadius = 24.dp,
+                contentPadding = 20.dp
+            ) {
                 Text(
                     text = "Associated Course",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
@@ -148,10 +165,10 @@ fun AddEditSessionScreen(
                             selected = isSelected,
                             onClick = { selectedSubjectId = sub.id },
                             label = { Text(sub.name) },
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(12.dp),
                             colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = EduTrackPrimarySoft,
-                                selectedLabelColor = EduTrackPrimary
+                                selectedContainerColor = SoftSage,
+                                selectedLabelColor = PrimaryForest
                             )
                         )
                     }
@@ -159,7 +176,10 @@ fun AddEditSessionScreen(
             }
 
             // Duration & Type Card
-            PremiumCard(contentPadding = 18.dp) {
+            OrganicCard(
+                cornerRadius = 24.dp,
+                contentPadding = 20.dp
+            ) {
                 Text(
                     text = "Study Duration & Mode",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
@@ -172,7 +192,11 @@ fun AddEditSessionScreen(
                     onValueChange = { durationText = it },
                     label = { Text("Duration (Minutes) *") },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(14.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = PrimaryForest,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -182,15 +206,15 @@ fun AddEditSessionScreen(
                     items(quickDurations) { d ->
                         val isCurrent = durationText == d.toString()
                         Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = if (isCurrent) EduTrackPrimarySoft else MaterialTheme.colorScheme.surfaceVariant,
+                            shape = RoundedCornerShape(10.dp),
+                            color = if (isCurrent) SoftSage else MaterialTheme.colorScheme.surfaceVariant,
                             modifier = Modifier.clickable { durationText = d.toString() }
                         ) {
                             Text(
                                 text = "${d}m",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontWeight = FontWeight.Bold,
-                                    color = if (isCurrent) EduTrackPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = if (isCurrent) PrimaryForest else MaterialTheme.colorScheme.onSurfaceVariant
                                 ),
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                             )
@@ -202,17 +226,17 @@ fun AddEditSessionScreen(
 
                 Text(
                     text = "Activity Classification",
-                    style = MaterialTheme.typography.labelSmall,
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     sessionTypes.forEach { (typeKey, typeLabel) ->
                         val isSelected = sessionType == typeKey
                         Surface(
-                            shape = RoundedCornerShape(10.dp),
-                            color = if (isSelected) EduTrackPrimarySoft else MaterialTheme.colorScheme.surfaceVariant,
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (isSelected) SoftSage else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable { sessionType = typeKey }
@@ -221,7 +245,7 @@ fun AddEditSessionScreen(
                                 text = typeLabel,
                                 style = MaterialTheme.typography.bodyMedium.copy(
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (isSelected) EduTrackPrimary else MaterialTheme.colorScheme.onSurface
+                                    color = if (isSelected) PrimaryForest else MaterialTheme.colorScheme.onSurface
                                 ),
                                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
                             )
@@ -231,7 +255,10 @@ fun AddEditSessionScreen(
             }
 
             // Focus Quality Score
-            PremiumCard(contentPadding = 18.dp) {
+            OrganicCard(
+                cornerRadius = 24.dp,
+                contentPadding = 20.dp
+            ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -246,7 +273,7 @@ fun AddEditSessionScreen(
                         text = "${focusScore.toInt()}%",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
-                            color = EduTrackSuccess
+                            color = SoftSuccess
                         )
                     )
                 }
@@ -258,14 +285,18 @@ fun AddEditSessionScreen(
                     onValueChange = { focusScore = it },
                     valueRange = 0f..100f,
                     colors = SliderDefaults.colors(
-                        thumbColor = EduTrackPrimary,
-                        activeTrackColor = EduTrackPrimary
+                        thumbColor = PrimaryForest,
+                        activeTrackColor = PrimaryForest,
+                        inactiveTrackColor = SoftSage
                     )
                 )
             }
 
             // Reflection Notes
-            PremiumCard(contentPadding = 18.dp) {
+            OrganicCard(
+                cornerRadius = 24.dp,
+                contentPadding = 20.dp
+            ) {
                 Text(
                     text = "Session Reflection & Completed Work",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
@@ -278,7 +309,11 @@ fun AddEditSessionScreen(
                     onValueChange = { notes = it },
                     placeholder = { Text("Summary of pages read, problems solved, or derivations proved...") },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = PrimaryForest,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    ),
                     minLines = 3
                 )
             }
@@ -298,8 +333,9 @@ fun AddEditSessionScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = EduTrackPrimary)
+                shape = RoundedCornerShape(18.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryForest),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
             ) {
                 Text(
                     text = if (existing != null) "Update Session Record" else "Log Study Session",

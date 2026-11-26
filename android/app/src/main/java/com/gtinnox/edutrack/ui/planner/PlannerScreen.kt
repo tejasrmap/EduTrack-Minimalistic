@@ -34,6 +34,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -49,18 +50,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gtinnox.edutrack.ui.components.AcademicEmptyState
-import com.gtinnox.edutrack.ui.components.PremiumCard
+import com.gtinnox.edutrack.ui.components.OrganicCard
 import com.gtinnox.edutrack.ui.components.SubjectChip
-import com.gtinnox.edutrack.ui.theme.EduTrackDanger
-import com.gtinnox.edutrack.ui.theme.EduTrackPrimary
-import com.gtinnox.edutrack.ui.theme.EduTrackPrimarySoft
-import com.gtinnox.edutrack.ui.theme.EduTrackSuccess
+import com.gtinnox.edutrack.ui.theme.PrimaryForest
+import com.gtinnox.edutrack.ui.theme.SoftDanger
+import com.gtinnox.edutrack.ui.theme.SoftSage
+import com.gtinnox.edutrack.ui.theme.SoftSuccess
 import com.gtinnox.edutrack.ui.viewmodel.PlannerViewModel
 import kotlinx.coroutines.flow.collectLatest
 import java.time.LocalDate
@@ -102,7 +102,7 @@ fun PlannerScreen(
             onDismissRequest = { showAddDialog = false },
             title = {
                 Text(
-                    text = "Schedule Academic Block",
+                    text = "Schedule Study Block",
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                 )
             },
@@ -114,20 +114,28 @@ fun PlannerScreen(
                         label = { Text("Block Title *") },
                         placeholder = { Text("e.g. Distributed Systems Lecture") },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(14.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = PrimaryForest,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        )
                     )
 
-                    Text("Subject *", style = MaterialTheme.typography.labelSmall)
+                    Text(
+                        "Target Subject",
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+                    )
+
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         items(subjects) { s ->
                             FilterChip(
                                 selected = subjectId == s.id,
                                 onClick = { subjectId = s.id },
                                 label = { Text(s.code.ifBlank { s.name }) },
-                                shape = RoundedCornerShape(8.dp),
+                                shape = RoundedCornerShape(12.dp),
                                 colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = EduTrackPrimarySoft,
-                                    selectedLabelColor = EduTrackPrimary
+                                    selectedContainerColor = SoftSage,
+                                    selectedLabelColor = PrimaryForest
                                 )
                             )
                         }
@@ -137,16 +145,16 @@ fun PlannerScreen(
                         OutlinedTextField(
                             value = startTime,
                             onValueChange = { startTime = it },
-                            label = { Text("Start Time") },
+                            label = { Text("Start") },
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(14.dp)
                         )
                         OutlinedTextField(
                             value = endTime,
                             onValueChange = { endTime = it },
-                            label = { Text("End Time") },
+                            label = { Text("End") },
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(14.dp)
                         )
                     }
 
@@ -156,7 +164,7 @@ fun PlannerScreen(
                         label = { Text("Location / Chapter") },
                         placeholder = { Text("Hall 402 / Review Lab") },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(14.dp)
                     )
                 }
             },
@@ -175,17 +183,18 @@ fun PlannerScreen(
                             showAddDialog = false
                         }
                     },
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = EduTrackPrimary)
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryForest)
                 ) {
-                    Text("Save Block", fontWeight = FontWeight.Bold)
+                    Text("Schedule Block", fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showAddDialog = false }) {
                     Text("Cancel")
                 }
-            }
+            },
+            shape = RoundedCornerShape(24.dp)
         )
     }
 
@@ -198,10 +207,12 @@ fun PlannerScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 20.dp),
+                .padding(horizontal = 22.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Header Row
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Header Row directly on background
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -209,24 +220,29 @@ fun PlannerScreen(
             ) {
                 Column {
                     Text(
-                        text = "Academic Agenda",
+                        text = "ACADEMIC TIMETABLE",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            letterSpacing = 2.sp,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = selectedDate.format(DateTimeFormatter.ofPattern("EEEE, MMM d")),
                         style = MaterialTheme.typography.headlineLarge,
                         color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = selectedDate.format(DateTimeFormatter.ofPattern("EEEE, MMMM d")),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
                 Button(
                     onClick = { showAddDialog = true },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = EduTrackPrimary)
+                    shape = RoundedCornerShape(18.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryForest),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text("Add Block", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
                 }
             }
@@ -244,11 +260,11 @@ fun PlannerScreen(
                         modifier = Modifier
                             .width(62.dp)
                             .clickable { viewModel.setDate(date.toString()) },
-                        shape = RoundedCornerShape(16.dp),
-                        color = if (isSelected) EduTrackPrimary else MaterialTheme.colorScheme.surface,
+                        shape = RoundedCornerShape(20.dp),
+                        color = if (isSelected) PrimaryForest else MaterialTheme.colorScheme.surface,
                         border = BorderStroke(
                             1.dp,
-                            if (isSelected) EduTrackPrimary else MaterialTheme.colorScheme.outline
+                            if (isSelected) PrimaryForest else MaterialTheme.colorScheme.outline
                         )
                     ) {
                         Column(
@@ -259,9 +275,9 @@ fun PlannerScreen(
                                 text = date.format(DateTimeFormatter.ofPattern("EEE")).uppercase(),
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 10.sp
+                                    fontSize = 11.sp
                                 ),
-                                color = if (isSelected) Color.White.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
+                                color = if (isSelected) Color.White.copy(alpha = 0.85f) else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
@@ -275,7 +291,7 @@ fun PlannerScreen(
                                     modifier = Modifier
                                         .size(5.dp)
                                         .background(
-                                            if (isSelected) Color.White else EduTrackPrimary,
+                                            if (isSelected) Color.White else PrimaryForest,
                                             CircleShape
                                         )
                                 )
@@ -289,22 +305,23 @@ fun PlannerScreen(
             if (events.isEmpty()) {
                 AcademicEmptyState(
                     icon = Icons.Default.CalendarMonth,
-                    title = "No Academic Blocks",
-                    description = "Nothing scheduled for ${selectedDate.format(DateTimeFormatter.ofPattern("MMM d"))}. Add a lecture or study slot.",
+                    title = "No Scheduled Blocks",
+                    description = "Nothing scheduled for ${selectedDate.format(DateTimeFormatter.ofPattern("MMM d"))}. Add a lecture, seminar, or study slot.",
                     actionText = "Schedule Event",
                     onActionClick = { showAddDialog = true }
                 )
             } else {
                 LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(events) { event ->
                         val sub = subjects.find { it.id == event.subjectId }
                         val isDone = event.isCompleted
 
-                        PremiumCard(
-                            contentPadding = 14.dp
+                        OrganicCard(
+                            cornerRadius = 20.dp,
+                            contentPadding = 16.dp
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -313,12 +330,12 @@ fun PlannerScreen(
                                 // Toggle status
                                 IconButton(
                                     onClick = { viewModel.toggleEvent(event) },
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier.size(28.dp)
                                 ) {
                                     Icon(
                                         imageVector = if (isDone) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
                                         contentDescription = "Toggle",
-                                        tint = if (isDone) EduTrackSuccess else MaterialTheme.colorScheme.onSurfaceVariant
+                                        tint = if (isDone) SoftSuccess else MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
 
@@ -327,30 +344,30 @@ fun PlannerScreen(
                                 Column(modifier = Modifier.weight(1f)) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Surface(
-                                            shape = RoundedCornerShape(6.dp),
-                                            color = EduTrackPrimarySoft
+                                            shape = RoundedCornerShape(8.dp),
+                                            color = SoftSage.copy(alpha = 0.6f)
                                         ) {
                                             Text(
                                                 text = "${event.startTime} - ${event.endTime}",
                                                 style = MaterialTheme.typography.labelSmall.copy(
                                                     fontWeight = FontWeight.Bold,
-                                                    color = EduTrackPrimary
+                                                    color = PrimaryForest
                                                 ),
-                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
                                             )
                                         }
 
                                         if (sub != null) {
                                             Spacer(modifier = Modifier.width(8.dp))
                                             SubjectChip(
-                                                name = sub.name.take(12),
+                                                name = sub.name.take(14),
                                                 code = sub.code,
                                                 colorHex = sub.color
                                             )
                                         }
                                     }
 
-                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Spacer(modifier = Modifier.height(6.dp))
                                     Text(
                                         text = event.title,
                                         style = MaterialTheme.typography.titleMedium.copy(
@@ -360,6 +377,7 @@ fun PlannerScreen(
                                     )
 
                                     if (event.description.isNotBlank()) {
+                                        Spacer(modifier = Modifier.height(2.dp))
                                         Text(
                                             text = event.description,
                                             style = MaterialTheme.typography.bodySmall,
@@ -370,12 +388,12 @@ fun PlannerScreen(
 
                                 IconButton(
                                     onClick = { viewModel.deleteEvent(event) },
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier.size(28.dp)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Delete,
                                         contentDescription = "Delete",
-                                        tint = EduTrackDanger.copy(alpha = 0.7f),
+                                        tint = SoftDanger.copy(alpha = 0.8f),
                                         modifier = Modifier.size(18.dp)
                                     )
                                 }

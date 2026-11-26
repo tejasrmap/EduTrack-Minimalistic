@@ -46,12 +46,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.gtinnox.edutrack.ui.components.PremiumCard
+import androidx.compose.ui.unit.sp
+import com.gtinnox.edutrack.ui.components.OrganicCard
 import com.gtinnox.edutrack.ui.components.SectionHeader
-import com.gtinnox.edutrack.ui.theme.EduTrackDanger
-import com.gtinnox.edutrack.ui.theme.EduTrackPrimary
-import com.gtinnox.edutrack.ui.theme.EduTrackPrimarySoft
-import com.gtinnox.edutrack.ui.theme.EduTrackSuccess
+import com.gtinnox.edutrack.ui.theme.PrimaryForest
+import com.gtinnox.edutrack.ui.theme.SoftDanger
+import com.gtinnox.edutrack.ui.theme.SoftSage
 import com.gtinnox.edutrack.ui.viewmodel.SettingsViewModel
 import kotlinx.coroutines.flow.collectLatest
 
@@ -86,14 +86,15 @@ fun SettingsScreen(
                         viewModel.resetToDefaults()
                     }
                 ) {
-                    Text("Reset Database", color = EduTrackDanger, fontWeight = FontWeight.Bold)
+                    Text("Reset Database", color = SoftDanger, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showResetDialog = false }) {
                     Text("Cancel")
                 }
-            }
+            },
+            shape = RoundedCornerShape(24.dp)
         )
     }
 
@@ -107,7 +108,7 @@ fun SettingsScreen(
                     onValueChange = { importJsonText = it },
                     placeholder = { Text("Paste exported JSON here...") },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(14.dp),
                     minLines = 4,
                     maxLines = 8
                 )
@@ -118,8 +119,8 @@ fun SettingsScreen(
                         showImportDialog = false
                         viewModel.importData(importJsonText)
                     },
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = EduTrackPrimary)
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryForest)
                 ) {
                     Text("Import & Restore")
                 }
@@ -128,7 +129,8 @@ fun SettingsScreen(
                 TextButton(onClick = { showImportDialog = false }) {
                     Text("Cancel")
                 }
-            }
+            },
+            shape = RoundedCornerShape(24.dp)
         )
     }
 
@@ -141,10 +143,10 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(horizontal = 22.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
-            // Header
+            // Header directly on background
             item {
                 Row(
                     modifier = Modifier
@@ -153,19 +155,36 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
                     }
-                    Text(
-                        text = "System Settings & Data",
-                        style = MaterialTheme.typography.headlineLarge,
-                        modifier = Modifier.weight(1f)
-                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "PREFERENCES & SYSTEM",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                letterSpacing = 1.5.sp,
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "Settings & Storage",
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
             }
 
             // Appearance & Theme Card
             item {
-                PremiumCard(contentPadding = 18.dp) {
+                OrganicCard(
+                    cornerRadius = 24.dp,
+                    contentPadding = 20.dp
+                ) {
                     SectionHeader(title = "Appearance & Theme")
                     Spacer(modifier = Modifier.height(10.dp))
 
@@ -181,7 +200,7 @@ fun SettingsScreen(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "Midnight high-contrast palette (#15151D)",
+                                text = "Midnight high-contrast palette (#171A18)",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -189,7 +208,10 @@ fun SettingsScreen(
                         Switch(
                             checked = uiState.isDarkMode,
                             onCheckedChange = { viewModel.toggleDarkMode(it) },
-                            colors = SwitchDefaults.colors(checkedThumbColor = EduTrackPrimary)
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = PrimaryForest,
+                                checkedTrackColor = SoftSage
+                            )
                         )
                     }
                 }
@@ -197,13 +219,16 @@ fun SettingsScreen(
 
             // Focus & Timer Intervals Card
             item {
-                PremiumCard(contentPadding = 18.dp) {
+                OrganicCard(
+                    cornerRadius = 24.dp,
+                    contentPadding = 20.dp
+                ) {
                     SectionHeader(title = "Focus & Pomodoro Timer")
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
                         text = "Default Focus Interval",
-                        style = MaterialTheme.typography.labelSmall,
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(6.dp))
@@ -215,10 +240,10 @@ fun SettingsScreen(
                                 selected = isSel,
                                 onClick = { viewModel.setPomodoroMinutes(mins) },
                                 label = { Text("${mins}m") },
-                                shape = RoundedCornerShape(10.dp),
+                                shape = RoundedCornerShape(12.dp),
                                 colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = EduTrackPrimarySoft,
-                                    selectedLabelColor = EduTrackPrimary
+                                    selectedContainerColor = SoftSage,
+                                    selectedLabelColor = PrimaryForest
                                 )
                             )
                         }
@@ -246,7 +271,10 @@ fun SettingsScreen(
                         Switch(
                             checked = uiState.soundEnabled,
                             onCheckedChange = { viewModel.setSoundEnabled(it) },
-                            colors = SwitchDefaults.colors(checkedThumbColor = EduTrackPrimary)
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = PrimaryForest,
+                                checkedTrackColor = SoftSage
+                            )
                         )
                     }
                 }
@@ -254,7 +282,10 @@ fun SettingsScreen(
 
             // Data Export, Import & Database Operations
             item {
-                PremiumCard(contentPadding = 18.dp) {
+                OrganicCard(
+                    cornerRadius = 24.dp,
+                    contentPadding = 20.dp
+                ) {
                     SectionHeader(title = "Data Persistence & Database")
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
@@ -267,8 +298,9 @@ fun SettingsScreen(
                     Button(
                         onClick = { viewModel.exportData() },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = EduTrackPrimary)
+                        shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryForest),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
                     ) {
                         Icon(Icons.Default.CloudDownload, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
@@ -280,7 +312,7 @@ fun SettingsScreen(
                     OutlinedButton(
                         onClick = { showImportDialog = true },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(16.dp)
                     ) {
                         Icon(Icons.Default.CloudUpload, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
@@ -292,11 +324,11 @@ fun SettingsScreen(
                     OutlinedButton(
                         onClick = { showResetDialog = true },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(16.dp)
                     ) {
-                        Icon(Icons.Default.Restore, contentDescription = null, tint = EduTrackDanger, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Default.Restore, contentDescription = null, tint = SoftDanger, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Reset Academic Curriculum to Seed Data", color = EduTrackDanger, fontWeight = FontWeight.Bold)
+                        Text("Reset Academic Curriculum to Seed Data", color = SoftDanger, fontWeight = FontWeight.Bold)
                     }
                 }
             }

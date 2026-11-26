@@ -21,7 +21,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -45,13 +44,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.gtinnox.edutrack.ui.components.PremiumCard
+import com.gtinnox.edutrack.ui.components.OrganicCard
 import com.gtinnox.edutrack.ui.components.SectionHeader
 import com.gtinnox.edutrack.ui.components.SubjectChip
-import com.gtinnox.edutrack.ui.theme.EduTrackDanger
-import com.gtinnox.edutrack.ui.theme.EduTrackPrimary
-import com.gtinnox.edutrack.ui.theme.EduTrackPrimarySoft
-import com.gtinnox.edutrack.ui.theme.EduTrackSuccess
+import com.gtinnox.edutrack.ui.theme.DeepForest
+import com.gtinnox.edutrack.ui.theme.PrimaryForest
+import com.gtinnox.edutrack.ui.theme.SoftDanger
+import com.gtinnox.edutrack.ui.theme.SoftSage
+import com.gtinnox.edutrack.ui.theme.SoftSuccess
 import com.gtinnox.edutrack.ui.viewmodel.SubjectViewModel
 
 @Composable
@@ -76,10 +76,14 @@ fun SubjectDetailScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Subject details loading...", style = MaterialTheme.typography.bodyLarge)
+            Text("Curriculum module loading...", style = MaterialTheme.typography.bodyLarge)
             Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = onNavigateBack) {
-                Text("Go Back")
+            Button(
+                onClick = onNavigateBack,
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryForest)
+            ) {
+                Text("Return to Modules")
             }
         }
         return
@@ -95,14 +99,19 @@ fun SubjectDetailScreen(
     val subColor = try {
         Color(android.graphics.Color.parseColor(subject.color))
     } catch (e: Exception) {
-        EduTrackPrimary
+        PrimaryForest
     }
 
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Delete Subject?") },
-            text = { Text("Are you sure you want to delete '${subject.name}'? All associated study sessions and assignments will also be deleted.") },
+            title = {
+                Text(
+                    "Delete Course Module?",
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                )
+            },
+            text = { Text("Are you sure you want to remove '${subject.name}'? Associated study logs and deliverables will also be cleared.") },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -111,24 +120,25 @@ fun SubjectDetailScreen(
                         onNavigateBack()
                     }
                 ) {
-                    Text("Delete", color = EduTrackDanger, fontWeight = FontWeight.Bold)
+                    Text("Delete", color = SoftDanger, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
                     Text("Cancel")
                 }
-            }
+            },
+            shape = RoundedCornerShape(24.dp)
         )
     }
 
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = 22.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // App Bar
+        // App Bar directly on background
         item {
             Row(
                 modifier = Modifier
@@ -137,25 +147,43 @@ fun SubjectDetailScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onNavigateBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
                 }
-                Text(
-                    text = "${subject.code} Curriculum",
-                    style = MaterialTheme.typography.headlineLarge,
-                    modifier = Modifier.weight(1f)
-                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "${subject.code} CURRICULUM",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            letterSpacing = 1.5.sp,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = subject.name,
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1
+                    )
+                }
                 IconButton(onClick = { onNavigateToEdit(subject.id) }) {
-                    Icon(Icons.Default.Edit, contentDescription = "Edit")
+                    Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 IconButton(onClick = { showDeleteDialog = true }) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = EduTrackDanger)
+                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = SoftDanger)
                 }
             }
         }
 
-        // Overview Header Card
+        // Overview Header Card (28dp corner radius)
         item {
-            PremiumCard(contentPadding = 20.dp) {
+            OrganicCard(
+                cornerRadius = 28.dp,
+                contentPadding = 22.dp
+            ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -167,14 +195,14 @@ fun SubjectDetailScreen(
                         colorHex = subject.color
                     )
                     Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant
+                        shape = RoundedCornerShape(10.dp),
+                        color = SoftSage.copy(alpha = 0.6f)
                     ) {
                         Text(
                             text = subject.semester,
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                            color = PrimaryForest,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                         )
                     }
                 }
@@ -202,8 +230,9 @@ fun SubjectDetailScreen(
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "Prof. ${subject.instructor.ifBlank { "Staff" }}",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                            text = "Prof. ${subject.instructor.ifBlank { "Department Staff" }}",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                     Column(horizontalAlignment = Alignment.End) {
@@ -217,7 +246,7 @@ fun SubjectDetailScreen(
                             text = "${subject.attendanceRate}%",
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = EduTrackSuccess
+                                color = SoftSuccess
                             )
                         )
                     }
@@ -231,18 +260,19 @@ fun SubjectDetailScreen(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Weekly Focus Progress",
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
+                        text = "Weekly Focus Commitment",
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = "${totalMinutes / 60}h ${totalMinutes % 60}m / ${subject.weeklyTargetHours}h",
                         style = MaterialTheme.typography.labelMedium.copy(
                             fontWeight = FontWeight.Bold,
-                            color = if (progress >= 1f) EduTrackSuccess else EduTrackPrimary
+                            color = if (progress >= 1f) SoftSuccess else PrimaryForest
                         )
                     )
                 }
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 LinearProgressIndicator(
                     progress = { progress },
                     modifier = Modifier
@@ -250,42 +280,46 @@ fun SubjectDetailScreen(
                         .height(8.dp)
                         .clip(RoundedCornerShape(4.dp)),
                     color = subColor,
-                    trackColor = subColor.copy(alpha = 0.15f)
+                    trackColor = SoftSage.copy(alpha = 0.6f)
                 )
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(22.dp))
 
                 Button(
                     onClick = { onNavigateToTimer(subject.id) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = EduTrackPrimary)
+                        .height(52.dp),
+                    shape = RoundedCornerShape(18.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryForest),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
                 ) {
                     Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(20.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Start Focus Session For This Course",
+                        text = "Start Focus Session for Course",
                         style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
                     )
                 }
             }
         }
 
-        // Study Sessions History
+        // Study Sessions History Header directly on background
         item {
             SectionHeader(
                 title = "Study Session Logs",
-                badgeText = "${sessions.size} Sessions"
+                badgeText = "${sessions.size} Sessions logged"
             )
         }
 
         if (sessions.isEmpty()) {
             item {
-                PremiumCard(contentPadding = 18.dp) {
+                OrganicCard(
+                    cornerRadius = 20.dp,
+                    contentPadding = 18.dp
+                ) {
                     Text(
-                        text = "No study sessions recorded yet for this course. Launch the Pomodoro timer or manually log study hours.",
+                        text = "No study sessions recorded yet for this course. Launch the Focus Timer to begin accumulating verified academic hours.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -293,30 +327,33 @@ fun SubjectDetailScreen(
             }
         } else {
             items(sessions) { s ->
-                PremiumCard(contentPadding = 14.dp) {
+                OrganicCard(
+                    cornerRadius = 18.dp,
+                    contentPadding = 16.dp
+                ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = EduTrackPrimarySoft
+                            shape = RoundedCornerShape(10.dp),
+                            color = SoftSage.copy(alpha = 0.6f)
                         ) {
                             Text(
                                 text = "${s.durationMinutes} mins · ${s.sessionType.replace("_", " ").uppercase()}",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontWeight = FontWeight.Bold,
-                                    color = EduTrackPrimary
+                                    color = PrimaryForest
                                 ),
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                             )
                         }
                         Text(
-                            text = "Focus Score: ${s.focusScore}%",
+                            text = "Focus: ${s.focusScore}%",
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = EduTrackSuccess
+                                color = SoftSuccess
                             )
                         )
                     }

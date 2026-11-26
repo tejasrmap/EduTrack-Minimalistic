@@ -5,8 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,89 +29,114 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.gtinnox.edutrack.ui.theme.AcademicIndigo
-import com.gtinnox.edutrack.ui.theme.AcademicSage
-import com.gtinnox.edutrack.ui.theme.EduTrackPrimary
-import com.gtinnox.edutrack.ui.theme.EduTrackSuccess
+import com.gtinnox.edutrack.ui.theme.DeepForest
+import com.gtinnox.edutrack.ui.theme.MutedSage
+import com.gtinnox.edutrack.ui.theme.PrimaryForest
+import com.gtinnox.edutrack.ui.theme.SoftSage
+import com.gtinnox.edutrack.ui.theme.SoftSuccess
 import com.gtinnox.edutrack.ui.viewmodel.DayTrend
 import com.gtinnox.edutrack.ui.viewmodel.SubjectStudyStat
+import java.time.LocalDate
 
+// ==========================================
+// Clean 7-Day Activity Chart (Sitting Naturally on Background)
+// ==========================================
 @Composable
-fun MinimalStudyBarChart(
+fun SoftAcademiaWeeklyActivity(
     trends: List<DayTrend>,
-    targetMinutes: Int = 180,
     modifier: Modifier = Modifier
 ) {
-    val barColor = EduTrackPrimary
-    val targetLineColor = EduTrackSuccess.copy(alpha = 0.5f)
-    val maxMins = (trends.maxOfOrNull { it.studyMinutes } ?: 180).coerceAtLeast(targetMinutes).coerceAtLeast(1)
+    val totalMins = trends.sumOf { it.studyMinutes }
+    val maxMins = (trends.maxOfOrNull { it.studyMinutes } ?: 180).coerceAtLeast(60)
+
+    val currentDayIndex = LocalDate.now().dayOfWeek.value - 1 // 0=Mon, 6=Sun
 
     Column(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Weekly Activity",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+
+            Text(
+                text = "${totalMins / 60}h ${totalMins % 60}m total",
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // Canvas 7 rounded bars
         Canvas(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(150.dp)
-                .padding(vertical = 8.dp)
+                .height(120.dp)
         ) {
             val canvasWidth = size.width
             val canvasHeight = size.height
             val barCount = trends.size
             if (barCount == 0) return@Canvas
 
-            val barWidth = (canvasWidth / (barCount * 2)).coerceIn(14f, 34f)
-            val spacing = (canvasWidth - (barWidth * barCount)) / (barCount + 1)
-
-            // Target dashed/solid line
-            val targetY = canvasHeight - ((targetMinutes.toFloat() / maxMins.toFloat()) * canvasHeight)
-            drawLine(
-                color = targetLineColor,
-                start = Offset(0f, targetY),
-                end = Offset(canvasWidth, targetY),
-                strokeWidth = 2.dp.toPx(),
-                cap = StrokeCap.Round
-            )
+            val barWidth = 24.dp.toPx()
+            val totalBarsWidth = barWidth * barCount
+            val spacing = (canvasWidth - totalBarsWidth) / (barCount + 1)
 
             trends.forEachIndexed { index, day ->
                 val x = spacing + index * (barWidth + spacing)
-                val heightFactor = (day.studyMinutes.toFloat() / maxMins.toFloat()).coerceIn(0.04f, 1f)
+                val heightFactor = (day.studyMinutes.toFloat() / maxMins.toFloat()).coerceIn(0.08f, 1f)
                 val barHeight = canvasHeight * heightFactor
                 val y = canvasHeight - barHeight
 
-                // Background track
-                drawRoundRect(
-                    color = barColor.copy(alpha = 0.1f),
-                    topLeft = Offset(x, 0f),
-                    size = Size(barWidth, canvasHeight),
-                    cornerRadius = CornerRadius(8f, 8f)
-                )
+                val isToday = index == currentDayIndex.coerceIn(0, barCount - 1)
+                val barColor = if (isToday) PrimaryForest else SoftSage
 
-                // Value bar
+                // Draw rounded bar
                 drawRoundRect(
-                    color = if (day.studyMinutes >= targetMinutes) EduTrackSuccess else barColor,
+                    color = barColor,
                     topLeft = Offset(x, y),
                     size = Size(barWidth, barHeight),
-                    cornerRadius = CornerRadius(8f, 8f)
+                    cornerRadius = CornerRadius(12.dp.toPx(), 12.dp.toPx())
                 )
             }
         }
 
-        // Days labels row
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Days of week row
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceAround
         ) {
-            trends.forEach {
+            trends.forEachIndexed { index, day ->
+                val isToday = index == currentDayIndex.coerceIn(0, trends.size - 1)
                 Text(
-                    text = it.dayLabel,
-                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = day.dayLabel.take(1),
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
+                        color = if (isToday) PrimaryForest else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 )
             }
         }
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+// Backward-compatible alias
+@Composable
+fun MinimalStudyBarChart(
+    trends: List<DayTrend>,
+    targetMinutes: Int = 180,
+    modifier: Modifier = Modifier
+) {
+    SoftAcademiaWeeklyActivity(trends = trends, modifier = modifier)
+}
+
 @Composable
 fun MinimalSubjectDonutChart(
     stats: List<SubjectStudyStat>,
@@ -138,16 +161,15 @@ fun MinimalSubjectDonutChart(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
-            modifier = Modifier.size(170.dp),
+            modifier = Modifier.size(160.dp),
             contentAlignment = Alignment.Center
         ) {
-            Canvas(modifier = Modifier.size(154.dp)) {
+            Canvas(modifier = Modifier.size(144.dp)) {
                 var startAngle = -90f
-                val stroke = Stroke(width = 24.dp.toPx(), cap = StrokeCap.Round)
+                val stroke = Stroke(width = 18.dp.toPx(), cap = StrokeCap.Round)
 
-                // Background subtle ring
                 drawCircle(
-                    color = Color.LightGray.copy(alpha = 0.2f),
+                    color = SoftSage.copy(alpha = 0.4f),
                     style = stroke
                 )
 
@@ -156,7 +178,7 @@ fun MinimalSubjectDonutChart(
                     val statColor = try {
                         Color(android.graphics.Color.parseColor(stat.color))
                     } catch (e: Exception) {
-                        EduTrackPrimary
+                        PrimaryForest
                     }
 
                     if (sweep > 0f) {
@@ -174,46 +196,14 @@ fun MinimalSubjectDonutChart(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = "${totalMins / 60}h ${totalMins % 60}m",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = "Total Logged",
-                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                    style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Legend chips
-        FlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            stats.forEach { stat ->
-                val chipColor = try {
-                    Color(android.graphics.Color.parseColor(stat.color))
-                } catch (e: Exception) {
-                    EduTrackPrimary
-                }
-                Row(
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(10.dp)
-                            .background(chipColor, CircleShape)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "${stat.subjectCode} (${stat.totalMinutes / 60}h)",
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
             }
         }
     }
@@ -229,8 +219,8 @@ fun FocusTrendChart(
     Canvas(
         modifier = modifier
             .fillMaxWidth()
-            .height(100.dp)
-            .padding(vertical = 8.dp)
+            .height(90.dp)
+            .padding(vertical = 6.dp)
     ) {
         val width = size.width
         val height = size.height
@@ -246,30 +236,15 @@ fun FocusTrendChart(
 
         drawPath(
             path = path,
-            color = EduTrackPrimary,
-            style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
+            color = PrimaryForest,
+            style = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round)
         )
-
-        scores.forEachIndexed { i, score ->
-            val x = i * stepX
-            val y = height - (score.toFloat() / maxScore * height)
-            drawCircle(
-                color = EduTrackPrimary,
-                radius = 5.dp.toPx(),
-                center = Offset(x, y)
-            )
-            drawCircle(
-                color = Color.White,
-                radius = 2.5.dp.toPx(),
-                center = Offset(x, y)
-            )
-        }
     }
 }
 
 @Composable
 fun AcademicCalendarHeatmap(
-    days: List<Int>, // 0 = empty, 1 = low, 2 = medium, 3 = high
+    days: List<Int>,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -281,10 +256,10 @@ fun AcademicCalendarHeatmap(
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 week.forEach { level ->
                     val color = when (level) {
-                        3 -> EduTrackSuccess
-                        2 -> EduTrackSuccess.copy(alpha = 0.65f)
-                        1 -> EduTrackSuccess.copy(alpha = 0.3f)
-                        else -> MaterialTheme.colorScheme.surfaceVariant
+                        3 -> PrimaryForest
+                        2 -> SoftSuccess
+                        1 -> SoftSage
+                        else -> MutedSage
                     }
                     Box(
                         modifier = Modifier

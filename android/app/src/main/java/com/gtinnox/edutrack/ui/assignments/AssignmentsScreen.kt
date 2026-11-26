@@ -30,6 +30,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -48,15 +49,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.gtinnox.edutrack.ui.components.AcademicEmptyState
-import com.gtinnox.edutrack.ui.components.PremiumCard
+import com.gtinnox.edutrack.ui.components.OrganicCard
 import com.gtinnox.edutrack.ui.components.PriorityChip
 import com.gtinnox.edutrack.ui.components.SubjectChip
-import com.gtinnox.edutrack.ui.theme.EduTrackDanger
-import com.gtinnox.edutrack.ui.theme.EduTrackPrimary
-import com.gtinnox.edutrack.ui.theme.EduTrackPrimarySoft
-import com.gtinnox.edutrack.ui.theme.EduTrackSuccess
-import com.gtinnox.edutrack.ui.theme.EduTrackWarning
+import com.gtinnox.edutrack.ui.theme.PrimaryForest
+import com.gtinnox.edutrack.ui.theme.SoftDanger
+import com.gtinnox.edutrack.ui.theme.SoftSage
+import com.gtinnox.edutrack.ui.theme.SoftSuccess
+import com.gtinnox.edutrack.ui.theme.SoftWarning
 import com.gtinnox.edutrack.ui.viewmodel.AssignmentViewModel
 import kotlinx.coroutines.flow.collectLatest
 import java.time.LocalDate
@@ -104,20 +106,24 @@ fun AssignmentsScreen(
                         label = { Text("Deliverable Title *") },
                         placeholder = { Text("e.g. Dynamic Programming Problem Set") },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(14.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = PrimaryForest,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        )
                     )
 
-                    Text("Subject *", style = MaterialTheme.typography.labelSmall)
+                    Text("Subject *", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         items(subjects) { s ->
                             FilterChip(
                                 selected = subjectId == s.id,
                                 onClick = { subjectId = s.id },
                                 label = { Text(s.code.ifBlank { s.name }) },
-                                shape = RoundedCornerShape(8.dp),
+                                shape = RoundedCornerShape(12.dp),
                                 colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = EduTrackPrimarySoft,
-                                    selectedLabelColor = EduTrackPrimary
+                                    selectedContainerColor = SoftSage,
+                                    selectedLabelColor = PrimaryForest
                                 )
                             )
                         }
@@ -128,17 +134,17 @@ fun AssignmentsScreen(
                         onValueChange = { dueDate = it },
                         label = { Text("Due Date (YYYY-MM-DD)") },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(14.dp)
                     )
 
-                    Text("Priority Level", style = MaterialTheme.typography.labelSmall)
+                    Text("Priority Level", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         listOf("low", "medium", "urgent").forEach { p ->
                             FilterChip(
                                 selected = priority == p,
                                 onClick = { priority = p },
                                 label = { Text(p.replaceFirstChar { it.uppercase() }) },
-                                shape = RoundedCornerShape(8.dp)
+                                shape = RoundedCornerShape(12.dp)
                             )
                         }
                     }
@@ -148,7 +154,7 @@ fun AssignmentsScreen(
                         onValueChange = { description = it },
                         label = { Text("Notes & Requirements") },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(14.dp),
                         minLines = 2
                     )
                 }
@@ -169,8 +175,8 @@ fun AssignmentsScreen(
                             showAddDialog = false
                         }
                     },
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = EduTrackPrimary)
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryForest)
                 ) {
                     Text("Save Task", fontWeight = FontWeight.Bold)
                 }
@@ -179,7 +185,8 @@ fun AssignmentsScreen(
                 TextButton(onClick = { showAddDialog = false }) {
                     Text("Cancel")
                 }
-            }
+            },
+            shape = RoundedCornerShape(24.dp)
         )
     }
 
@@ -192,10 +199,12 @@ fun AssignmentsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 20.dp),
+                .padding(horizontal = 22.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Header
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Header directly on background
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -203,29 +212,34 @@ fun AssignmentsScreen(
             ) {
                 Column {
                     Text(
-                        text = "Assignments & Deliverables",
+                        text = "COURSE DELIVERABLES",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            letterSpacing = 2.sp,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Assignments",
                         style = MaterialTheme.typography.headlineLarge,
                         color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "${tasks.count { it.status != "completed" }} Pending Deadlines",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
                 Button(
                     onClick = { showAddDialog = true },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = EduTrackPrimary)
+                    shape = RoundedCornerShape(18.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryForest),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text("New Task", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
                 }
             }
 
-            // Status Filter Tabs (All / Pending / Completed)
+            // Status Filter Tabs (24dp rounded container)
             val tabs = listOf("all" to "All Tasks", "pending" to "Pending", "completed" to "Completed")
             val currentTabIndex = when (filterStatus) {
                 "pending" -> 1
@@ -234,8 +248,9 @@ fun AssignmentsScreen(
             }
 
             Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant
+                shape = RoundedCornerShape(22.dp),
+                color = MaterialTheme.colorScheme.surface,
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
             ) {
                 Row(
                     modifier = Modifier
@@ -248,15 +263,15 @@ fun AssignmentsScreen(
                             modifier = Modifier
                                 .weight(1f)
                                 .clickable { viewModel.setFilterStatus(statusVal) },
-                            shape = RoundedCornerShape(10.dp),
-                            color = if (isSelected) MaterialTheme.colorScheme.surface else Color.Transparent
+                            shape = RoundedCornerShape(18.dp),
+                            color = if (isSelected) SoftSage else Color.Transparent
                         ) {
                             Text(
                                 text = label,
                                 style = MaterialTheme.typography.labelMedium.copy(
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                                 ),
-                                color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = if (isSelected) PrimaryForest else MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(vertical = 8.dp),
                                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
                             )
@@ -276,15 +291,16 @@ fun AssignmentsScreen(
                 )
             } else {
                 LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(tasks) { task ->
                         val sub = subjects.find { it.id == task.subjectId }
                         val isCompleted = task.status == "completed"
 
-                        PremiumCard(
-                            contentPadding = 14.dp,
+                        OrganicCard(
+                            cornerRadius = 20.dp,
+                            contentPadding = 16.dp,
                             onClick = { viewModel.toggleTask(task) }
                         ) {
                             Row(
@@ -294,8 +310,8 @@ fun AssignmentsScreen(
                                 Icon(
                                     imageVector = if (isCompleted) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
                                     contentDescription = "Toggle",
-                                    tint = if (isCompleted) EduTrackSuccess else EduTrackWarning,
-                                    modifier = Modifier.size(22.dp)
+                                    tint = if (isCompleted) SoftSuccess else SoftWarning,
+                                    modifier = Modifier.size(24.dp)
                                 )
 
                                 Spacer(modifier = Modifier.width(12.dp))
@@ -312,14 +328,14 @@ fun AssignmentsScreen(
                                         if (sub != null) {
                                             Spacer(modifier = Modifier.width(8.dp))
                                             SubjectChip(
-                                                name = sub.name.take(10),
+                                                name = sub.name.take(12),
                                                 code = sub.code,
                                                 colorHex = sub.color
                                             )
                                         }
                                     }
 
-                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Spacer(modifier = Modifier.height(3.dp))
                                     Text(
                                         text = "Due: ${task.dueDate} · ${task.category.replaceFirstChar { it.uppercase() }}",
                                         style = MaterialTheme.typography.bodySmall,
@@ -333,12 +349,12 @@ fun AssignmentsScreen(
 
                                 IconButton(
                                     onClick = { viewModel.deleteTask(task) },
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier.size(28.dp)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Delete,
                                         contentDescription = "Delete",
-                                        tint = EduTrackDanger.copy(alpha = 0.7f),
+                                        tint = SoftDanger.copy(alpha = 0.8f),
                                         modifier = Modifier.size(18.dp)
                                     )
                                 }

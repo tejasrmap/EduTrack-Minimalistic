@@ -9,16 +9,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -36,12 +33,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.gtinnox.edutrack.ui.components.PremiumCard
+import androidx.compose.ui.unit.sp
+import com.gtinnox.edutrack.ui.components.OrganicCard
 import com.gtinnox.edutrack.ui.components.SubjectChip
-import com.gtinnox.edutrack.ui.theme.EduTrackDanger
-import com.gtinnox.edutrack.ui.theme.EduTrackPrimary
-import com.gtinnox.edutrack.ui.theme.EduTrackPrimarySoft
-import com.gtinnox.edutrack.ui.theme.EduTrackSuccess
+import com.gtinnox.edutrack.ui.theme.PrimaryForest
+import com.gtinnox.edutrack.ui.theme.SoftDanger
+import com.gtinnox.edutrack.ui.theme.SoftSage
+import com.gtinnox.edutrack.ui.theme.SoftSuccess
 import com.gtinnox.edutrack.ui.viewmodel.SessionViewModel
 
 @Composable
@@ -67,7 +65,10 @@ fun SessionDetailScreen(
         ) {
             Text("Session details loading...", style = MaterialTheme.typography.bodyLarge)
             Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = onNavigateBack) {
+            Button(
+                onClick = onNavigateBack,
+                shape = RoundedCornerShape(16.dp)
+            ) {
                 Text("Go Back")
             }
         }
@@ -80,7 +81,12 @@ fun SessionDetailScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Delete Session Record?") },
+            title = {
+                Text(
+                    "Delete Session Record?",
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                )
+            },
             text = { Text("Are you sure you want to delete this ${session.durationMinutes}-minute study record?") },
             confirmButton = {
                 TextButton(
@@ -90,24 +96,25 @@ fun SessionDetailScreen(
                         onNavigateBack()
                     }
                 ) {
-                    Text("Delete", color = EduTrackDanger, fontWeight = FontWeight.Bold)
+                    Text("Delete", color = SoftDanger, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
                     Text("Cancel")
                 }
-            }
+            },
+            shape = RoundedCornerShape(24.dp)
         )
     }
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = 22.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // App Bar
+        // App Bar directly on background
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -115,23 +122,40 @@ fun SessionDetailScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onNavigateBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
             }
-            Text(
-                text = "Study Session Record",
-                style = MaterialTheme.typography.headlineLarge,
-                modifier = Modifier.weight(1f)
-            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "SESSION AUDIT",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        letterSpacing = 1.5.sp,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "Study Session Record",
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
             IconButton(onClick = { onNavigateToEdit(session.id) }) {
-                Icon(Icons.Default.Edit, contentDescription = "Edit")
+                Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             IconButton(onClick = { showDeleteDialog = true }) {
-                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = EduTrackDanger)
+                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = SoftDanger)
             }
         }
 
         // Main Session Card
-        PremiumCard(contentPadding = 20.dp) {
+        OrganicCard(
+            cornerRadius = 28.dp,
+            contentPadding = 22.dp
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -144,25 +168,25 @@ fun SessionDetailScreen(
                         colorHex = subject.color
                     )
                 } else {
-                    Text("General Focus", style = MaterialTheme.typography.titleMedium)
+                    Text("General Focus Block", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
                 }
 
                 Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = EduTrackPrimarySoft
+                    shape = RoundedCornerShape(10.dp),
+                    color = SoftSage.copy(alpha = 0.6f)
                 ) {
                     Text(
                         text = session.sessionType.replace("_", " ").uppercase(),
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
-                            color = EduTrackPrimary
+                            color = PrimaryForest
                         ),
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -192,14 +216,14 @@ fun SessionDetailScreen(
                         text = "${session.focusScore}%",
                         style = MaterialTheme.typography.headlineMedium.copy(
                             fontWeight = FontWeight.Bold,
-                            color = EduTrackSuccess
+                            color = SoftSuccess
                         )
                     )
                 }
             }
 
             if (session.notes.isNotBlank()) {
-                Spacer(modifier = Modifier.height(18.dp))
+                Spacer(modifier = Modifier.height(20.dp))
                 Text(
                     text = "Session Reflection",
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),

@@ -26,7 +26,8 @@ data class DashboardUiState(
     val upcomingExams: List<ExaminationEntity> = emptyList(),
     val todaySchedule: List<ScheduleEventEntity> = emptyList(),
     val recentSessions: List<SessionWithSubject> = emptyList(),
-    val streakDays: Int = 7
+    val streakDays: Int = 7,
+    val weeklyTrends: List<Int> = listOf(140, 190, 210, 175, 230, 160, 200)
 )
 
 class DashboardViewModel(

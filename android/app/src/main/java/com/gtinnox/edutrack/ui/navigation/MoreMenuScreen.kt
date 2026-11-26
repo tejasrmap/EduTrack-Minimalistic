@@ -37,14 +37,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.gtinnox.edutrack.ui.components.PremiumCard
+import androidx.compose.ui.unit.sp
+import com.gtinnox.edutrack.ui.components.OrganicCard
 import com.gtinnox.edutrack.ui.components.SectionHeader
-import com.gtinnox.edutrack.ui.theme.EduTrackBorderLight
-import com.gtinnox.edutrack.ui.theme.EduTrackDanger
-import com.gtinnox.edutrack.ui.theme.EduTrackPrimary
-import com.gtinnox.edutrack.ui.theme.EduTrackPrimarySoft
-import com.gtinnox.edutrack.ui.theme.EduTrackSuccess
-import com.gtinnox.edutrack.ui.theme.EduTrackWarning
+import com.gtinnox.edutrack.ui.theme.DeepForest
+import com.gtinnox.edutrack.ui.theme.PrimaryForest
+import com.gtinnox.edutrack.ui.theme.SoftSage
+import com.gtinnox.edutrack.ui.theme.SoftSuccess
+import com.gtinnox.edutrack.ui.theme.SoftTerracotta
 
 data class MenuItem(
     val title: String,
@@ -64,35 +64,35 @@ fun MoreMenuScreen(
             title = "Study Session History",
             subtitle = "Comprehensive logs of focus blocks and reflections",
             icon = Icons.Default.History,
-            iconColor = EduTrackPrimary,
+            iconColor = PrimaryForest,
             route = Screen.History.route
         ),
         MenuItem(
             title = "Assignments & Deliverables",
             subtitle = "Homework, problem sets, lab reports, and deadlines",
             icon = Icons.Default.Assignment,
-            iconColor = EduTrackWarning,
+            iconColor = SoftTerracotta,
             route = Screen.Assignments.route
         ),
         MenuItem(
             title = "Examinations Portal",
             subtitle = "Midterms, finals, quiz countdowns, and targets",
             icon = Icons.Default.School,
-            iconColor = EduTrackPrimary,
+            iconColor = DeepForest,
             route = Screen.Examinations.route
         ),
         MenuItem(
             title = "Milestone Goals & Quotas",
             subtitle = "Weekly study targets and academic milestones",
             icon = Icons.Default.Flag,
-            iconColor = EduTrackSuccess,
+            iconColor = SoftSuccess,
             route = Screen.Goals.route
         ),
         MenuItem(
             title = "Revision Notes & Formulas",
             subtitle = "Markdown notes, theorem summaries, and tags",
             icon = Icons.Default.MenuBook,
-            iconColor = EduTrackPrimary,
+            iconColor = PrimaryForest,
             route = Screen.Notes.route
         )
     )
@@ -102,28 +102,28 @@ fun MoreMenuScreen(
             title = "Scholar Identity & Profile",
             subtitle = "Switch academic personas or customize degree details",
             icon = Icons.Default.Person,
-            iconColor = EduTrackPrimary,
+            iconColor = PrimaryForest,
             route = Screen.Profile.route
         ),
         MenuItem(
             title = "System Settings & Data",
             subtitle = "Theme, Pomodoro intervals, Room export/import",
             icon = Icons.Default.Settings,
-            iconColor = EduTrackSuccess,
+            iconColor = SoftSuccess,
             route = Screen.Settings.route
         ),
         MenuItem(
             title = "Notification Center",
             subtitle = "Academic alerts, countdowns, and scheduled reviews",
             icon = Icons.Default.Notifications,
-            iconColor = EduTrackWarning,
+            iconColor = SoftTerracotta,
             route = Screen.Notifications.route
         ),
         MenuItem(
             title = "Onboarding Walkthrough",
             subtitle = "Revisit setup wizard and academic features",
             icon = Icons.Default.WavingHand,
-            iconColor = EduTrackPrimary,
+            iconColor = PrimaryForest,
             route = Screen.Onboarding.route
         )
     )
@@ -131,13 +131,23 @@ fun MoreMenuScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp)
+            .padding(horizontal = 22.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         item {
+            Spacer(modifier = Modifier.height(4.dp))
             Column {
                 Text(
-                    text = "Academic Suite Hub",
+                    text = "ACADEMIC PORTAL",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        letterSpacing = 2.sp,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Navigation & Suite Hub",
                     style = MaterialTheme.typography.headlineLarge,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -182,8 +192,9 @@ private fun MoreMenuRow(
     item: MenuItem,
     onClick: () -> Unit
 ) {
-    PremiumCard(
-        contentPadding = 14.dp,
+    OrganicCard(
+        cornerRadius = 20.dp,
+        contentPadding = 16.dp,
         onClick = onClick
     ) {
         Row(
@@ -191,9 +202,9 @@ private fun MoreMenuRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
-                modifier = Modifier.size(42.dp),
-                shape = RoundedCornerShape(12.dp),
-                color = item.iconColor.copy(alpha = 0.12f)
+                modifier = Modifier.size(44.dp),
+                shape = RoundedCornerShape(14.dp),
+                color = SoftSage.copy(alpha = 0.6f)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(

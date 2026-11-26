@@ -28,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -48,13 +49,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gtinnox.edutrack.ui.components.AcademicEmptyState
-import com.gtinnox.edutrack.ui.components.PremiumCard
+import com.gtinnox.edutrack.ui.components.OrganicCard
 import com.gtinnox.edutrack.ui.components.SubjectChip
-import com.gtinnox.edutrack.ui.theme.EduTrackDanger
-import com.gtinnox.edutrack.ui.theme.EduTrackPrimary
-import com.gtinnox.edutrack.ui.theme.EduTrackPrimarySoft
-import com.gtinnox.edutrack.ui.theme.EduTrackSuccess
-import com.gtinnox.edutrack.ui.theme.EduTrackWarning
+import com.gtinnox.edutrack.ui.theme.PrimaryForest
+import com.gtinnox.edutrack.ui.theme.SoftDanger
+import com.gtinnox.edutrack.ui.theme.SoftSage
+import com.gtinnox.edutrack.ui.theme.SoftSuccess
+import com.gtinnox.edutrack.ui.theme.SoftTerracotta
 import com.gtinnox.edutrack.ui.viewmodel.ExamViewModel
 import kotlinx.coroutines.flow.collectLatest
 import java.time.LocalDate
@@ -101,20 +102,24 @@ fun ExaminationsScreen(
                         label = { Text("Exam Name *") },
                         placeholder = { Text("e.g. Distributed Systems Midterm") },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(14.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = PrimaryForest,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        )
                     )
 
-                    Text("Subject *", style = MaterialTheme.typography.labelSmall)
+                    Text("Subject *", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         items(subjects) { s ->
                             FilterChip(
                                 selected = subjectId == s.id,
                                 onClick = { subjectId = s.id },
                                 label = { Text(s.code.ifBlank { s.name }) },
-                                shape = RoundedCornerShape(8.dp),
+                                shape = RoundedCornerShape(12.dp),
                                 colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = EduTrackPrimarySoft,
-                                    selectedLabelColor = EduTrackPrimary
+                                    selectedContainerColor = SoftSage,
+                                    selectedLabelColor = PrimaryForest
                                 )
                             )
                         }
@@ -126,14 +131,14 @@ fun ExaminationsScreen(
                             onValueChange = { examDate = it },
                             label = { Text("Date (YYYY-MM-DD)") },
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(14.dp)
                         )
                         OutlinedTextField(
                             value = examTime,
                             onValueChange = { examTime = it },
                             label = { Text("Time") },
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(14.dp)
                         )
                     }
 
@@ -143,14 +148,14 @@ fun ExaminationsScreen(
                             onValueChange = { location = it },
                             label = { Text("Hall / Room") },
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(14.dp)
                         )
                         OutlinedTextField(
                             value = targetGrade,
                             onValueChange = { targetGrade = it },
                             label = { Text("Target Grade") },
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(14.dp)
                         )
                     }
 
@@ -159,7 +164,7 @@ fun ExaminationsScreen(
                         onValueChange = { notes = it },
                         label = { Text("Exam Scope / Topics") },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(14.dp),
                         minLines = 2
                     )
                 }
@@ -181,8 +186,8 @@ fun ExaminationsScreen(
                             showAddDialog = false
                         }
                     },
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = EduTrackPrimary)
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryForest)
                 ) {
                     Text("Register Exam", fontWeight = FontWeight.Bold)
                 }
@@ -191,7 +196,8 @@ fun ExaminationsScreen(
                 TextButton(onClick = { showAddDialog = false }) {
                     Text("Cancel")
                 }
-            }
+            },
+            shape = RoundedCornerShape(24.dp)
         )
     }
 
@@ -204,10 +210,12 @@ fun ExaminationsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 20.dp),
+                .padding(horizontal = 22.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Header
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Header directly on background
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -215,24 +223,29 @@ fun ExaminationsScreen(
             ) {
                 Column {
                     Text(
-                        text = "Examinations Portal",
+                        text = "ACADEMIC ASSESSMENTS",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            letterSpacing = 2.sp,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Examinations",
                         style = MaterialTheme.typography.headlineLarge,
                         color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "${examsWithCountdown.size} Upcoming Midterms & Finals",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
                 Button(
                     onClick = { showAddDialog = true },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = EduTrackPrimary)
+                    shape = RoundedCornerShape(18.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryForest),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text("Register Exam", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
                 }
             }
@@ -255,15 +268,20 @@ fun ExaminationsScreen(
                         val daysRemaining = examItem.daysRemaining
                         val sub = subjects.find { it.id == exam.subjectId }
 
-                        PremiumCard(contentPadding = 16.dp) {
+                        val isUrgent = daysRemaining <= 3
+
+                        OrganicCard(
+                            cornerRadius = 22.dp,
+                            contentPadding = 18.dp
+                        ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Surface(
-                                    shape = RoundedCornerShape(12.dp),
-                                    color = if (daysRemaining <= 3) EduTrackDanger.copy(alpha = 0.12f) else EduTrackPrimarySoft,
-                                    modifier = Modifier.size(52.dp)
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = if (isUrgent) SoftTerracotta.copy(alpha = 0.5f) else SoftSage.copy(alpha = 0.7f),
+                                    modifier = Modifier.size(56.dp)
                                 ) {
                                     Column(
                                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -272,8 +290,8 @@ fun ExaminationsScreen(
                                         Text(
                                             text = "$daysRemaining",
                                             style = MaterialTheme.typography.titleLarge.copy(
-                                                fontWeight = FontWeight.ExtraBold,
-                                                color = if (daysRemaining <= 3) EduTrackDanger else EduTrackPrimary
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (isUrgent) SoftDanger else PrimaryForest
                                             )
                                         )
                                         Text(
@@ -281,7 +299,7 @@ fun ExaminationsScreen(
                                             style = MaterialTheme.typography.labelSmall.copy(
                                                 fontSize = 9.sp,
                                                 fontWeight = FontWeight.Bold,
-                                                color = if (daysRemaining <= 3) EduTrackDanger else EduTrackPrimary
+                                                color = if (isUrgent) SoftDanger else PrimaryForest
                                             )
                                         )
                                     }
@@ -306,7 +324,7 @@ fun ExaminationsScreen(
                                         }
                                     }
 
-                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Spacer(modifier = Modifier.height(3.dp))
                                     Text(
                                         text = "${exam.examDate} @ ${exam.examTime} · ${exam.location}",
                                         style = MaterialTheme.typography.bodySmall,
@@ -315,16 +333,16 @@ fun ExaminationsScreen(
                                 }
 
                                 Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = EduTrackSuccess.copy(alpha = 0.12f)
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = SoftSage.copy(alpha = 0.7f)
                                 ) {
                                     Text(
                                         text = "Target: ${exam.targetGrade}",
                                         style = MaterialTheme.typography.labelSmall.copy(
                                             fontWeight = FontWeight.Bold,
-                                            color = EduTrackSuccess
+                                            color = PrimaryForest
                                         ),
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp)
                                     )
                                 }
 
@@ -332,12 +350,12 @@ fun ExaminationsScreen(
 
                                 IconButton(
                                     onClick = { viewModel.deleteExam(exam) },
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier.size(28.dp)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Delete,
                                         contentDescription = "Delete",
-                                        tint = EduTrackDanger.copy(alpha = 0.7f),
+                                        tint = SoftDanger.copy(alpha = 0.8f),
                                         modifier = Modifier.size(18.dp)
                                     )
                                 }

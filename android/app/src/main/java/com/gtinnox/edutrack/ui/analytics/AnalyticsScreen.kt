@@ -10,11 +10,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,16 +20,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.gtinnox.edutrack.ui.components.AcademicCalendarHeatmap
 import com.gtinnox.edutrack.ui.components.FocusTrendChart
 import com.gtinnox.edutrack.ui.components.MetricCard
 import com.gtinnox.edutrack.ui.components.MinimalStudyBarChart
 import com.gtinnox.edutrack.ui.components.MinimalSubjectDonutChart
-import com.gtinnox.edutrack.ui.components.PremiumCard
+import com.gtinnox.edutrack.ui.components.OrganicCard
 import com.gtinnox.edutrack.ui.components.SectionHeader
-import com.gtinnox.edutrack.ui.theme.EduTrackPrimary
-import com.gtinnox.edutrack.ui.theme.EduTrackSuccess
-import com.gtinnox.edutrack.ui.theme.EduTrackWarning
+import com.gtinnox.edutrack.ui.theme.PrimaryForest
+import com.gtinnox.edutrack.ui.theme.SoftSuccess
 import com.gtinnox.edutrack.ui.viewmodel.AnalyticsViewModel
 
 @Composable
@@ -45,18 +42,28 @@ fun AnalyticsScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp)
+            .padding(horizontal = 22.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         item {
+            Spacer(modifier = Modifier.height(4.dp))
             Column {
                 Text(
-                    text = "Performance & Analytics",
+                    text = "ACADEMIC INSIGHTS",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        letterSpacing = 2.sp,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Performance & Metrics",
                     style = MaterialTheme.typography.headlineLarge,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "Weekly Study Trends & Cognitive Focus Metrics",
+                    text = "Weekly study distribution, curriculum split & focus momentum",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -74,7 +81,7 @@ fun AnalyticsScreen(
                     value = String.format("%.1fh", uiState.totalStudyHours),
                     subtitle = "${uiState.totalSessionsCount} recorded blocks",
                     icon = Icons.Default.Timer,
-                    iconTint = EduTrackPrimary,
+                    iconTint = PrimaryForest,
                     comparison = "+8% this week",
                     modifier = Modifier.weight(1f)
                 )
@@ -84,7 +91,7 @@ fun AnalyticsScreen(
                     value = "${uiState.averageFocusScore}%",
                     subtitle = "Cognitive score",
                     icon = Icons.Default.Psychology,
-                    iconTint = EduTrackSuccess,
+                    iconTint = SoftSuccess,
                     comparison = "Optimal zone",
                     modifier = Modifier.weight(1f)
                 )
@@ -93,7 +100,10 @@ fun AnalyticsScreen(
 
         // Weekly Study Duration Bar Chart
         item {
-            PremiumCard(contentPadding = 20.dp) {
+            OrganicCard(
+                cornerRadius = 24.dp,
+                contentPadding = 20.dp
+            ) {
                 SectionHeader(
                     title = "Daily Focus Distribution",
                     badgeText = "Goal: 3h/day"
@@ -114,7 +124,10 @@ fun AnalyticsScreen(
 
         // Subject Breakdown Donut Chart
         item {
-            PremiumCard(contentPadding = 20.dp) {
+            OrganicCard(
+                cornerRadius = 24.dp,
+                contentPadding = 20.dp
+            ) {
                 SectionHeader(
                     title = "Curriculum Allocation",
                     badgeText = "${uiState.subjectStats.size} Subjects"
@@ -133,7 +146,10 @@ fun AnalyticsScreen(
         // Focus Score Trend Line Chart
         if (uiState.focusTrendScores.isNotEmpty()) {
             item {
-                PremiumCard(contentPadding = 20.dp) {
+                OrganicCard(
+                    cornerRadius = 24.dp,
+                    contentPadding = 20.dp
+                ) {
                     SectionHeader(
                         title = "Cognitive Focus Trend",
                         badgeText = "Recent Sessions"
@@ -152,7 +168,10 @@ fun AnalyticsScreen(
 
         // Academic Calendar Activity Heatmap
         item {
-            PremiumCard(contentPadding = 20.dp) {
+            OrganicCard(
+                cornerRadius = 24.dp,
+                contentPadding = 20.dp
+            ) {
                 SectionHeader(
                     title = "Study Activity Heatmap",
                     badgeText = "Past 28 Days"

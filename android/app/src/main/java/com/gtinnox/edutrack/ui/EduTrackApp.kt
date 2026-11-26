@@ -11,6 +11,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -25,6 +26,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.gtinnox.edutrack.data.repository.EduTrackRepository
+import com.gtinnox.edutrack.ui.theme.PrimaryForest
 import com.gtinnox.edutrack.ui.analytics.AnalyticsScreen
 import com.gtinnox.edutrack.ui.assignments.AssignmentsScreen
 import com.gtinnox.edutrack.ui.components.AcademicHeader
@@ -137,10 +139,9 @@ fun EduTrackApp(
 
     Scaffold(
         topBar = {
-            if (isTopLevel) {
+            if (isTopLevel && currentRoute != Screen.Dashboard.route) {
                 AcademicHeader(
                     title = when (currentRoute) {
-                        Screen.Dashboard.route -> "EduTrack"
                         Screen.Subjects.route -> "Curriculum"
                         Screen.Timer.route -> "Focus Mode"
                         Screen.Planner.route -> "Academic Agenda"
@@ -171,8 +172,9 @@ fun EduTrackApp(
             if (isTopLevel) {
                 FloatingActionButton(
                     onClick = { showQuickAdd = true },
-                    containerColor = AcademicIndigo,
-                    contentColor = androidx.compose.ui.graphics.Color.White
+                    containerColor = PrimaryForest,
+                    contentColor = androidx.compose.ui.graphics.Color.White,
+                    shape = androidx.compose.foundation.shape.CircleShape
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Quick Add")
                 }
@@ -204,7 +206,10 @@ fun EduTrackApp(
                     },
                     onLogSession = {
                         navController.navigate(Screen.AddEditSession.createRoute())
-                    }
+                    },
+                    onSearchClick = { showGlobalSearch = true },
+                    onNotificationsClick = { navController.navigate(Screen.Notifications.route) },
+                    unreadNotificationsCount = unreadCount
                 )
             }
 

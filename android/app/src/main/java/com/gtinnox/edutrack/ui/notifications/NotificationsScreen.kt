@@ -17,14 +17,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Assignment
-import androidx.compose.material.icons.filled.ClearAll
-import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.TrendingUp
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -37,17 +33,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.gtinnox.edutrack.data.repository.EduTrackRepository
 import com.gtinnox.edutrack.ui.components.AcademicEmptyState
-import com.gtinnox.edutrack.ui.components.PremiumCard
-import com.gtinnox.edutrack.ui.theme.EduTrackDanger
-import com.gtinnox.edutrack.ui.theme.EduTrackPrimary
-import com.gtinnox.edutrack.ui.theme.EduTrackPrimarySoft
-import com.gtinnox.edutrack.ui.theme.EduTrackSuccess
-import com.gtinnox.edutrack.ui.theme.EduTrackWarning
+import com.gtinnox.edutrack.ui.components.OrganicCard
+import com.gtinnox.edutrack.ui.theme.DeepForest
+import com.gtinnox.edutrack.ui.theme.PrimaryForest
+import com.gtinnox.edutrack.ui.theme.SoftSage
+import com.gtinnox.edutrack.ui.theme.SoftSuccess
+import com.gtinnox.edutrack.ui.theme.SoftTerracotta
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -63,7 +59,7 @@ fun NotificationsScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = 22.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item {
@@ -74,12 +70,24 @@ fun NotificationsScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onNavigateBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
                 }
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
+                        text = "ACADEMIC DISPATCH",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            letterSpacing = 1.5.sp,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
                         text = "Notification Center",
-                        style = MaterialTheme.typography.headlineLarge,
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
@@ -97,7 +105,7 @@ fun NotificationsScreen(
                             }
                         }
                     ) {
-                        Text("Mark Read", color = EduTrackPrimary, fontWeight = FontWeight.Bold)
+                        Text("Mark Read", color = PrimaryForest, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -120,15 +128,15 @@ fun NotificationsScreen(
                     else -> Icons.Default.Timer
                 }
                 val iconColor = when (notif.type) {
-                    "exam" -> EduTrackPrimary
-                    "assignment" -> EduTrackWarning
-                    "streak" -> EduTrackSuccess
-                    else -> EduTrackPrimary
+                    "exam" -> DeepForest
+                    "assignment" -> SoftTerracotta
+                    "streak" -> SoftSuccess
+                    else -> PrimaryForest
                 }
 
-                PremiumCard(
-                    contentPadding = 14.dp,
-                    backgroundColor = if (!notif.isRead) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
+                OrganicCard(
+                    cornerRadius = 20.dp,
+                    contentPadding = 16.dp,
                     onClick = {
                         CoroutineScope(Dispatchers.IO).launch {
                             repository.markNotificationRead(notif.id)
@@ -141,8 +149,8 @@ fun NotificationsScreen(
                     ) {
                         Surface(
                             shape = CircleShape,
-                            color = iconColor.copy(alpha = 0.12f),
-                            modifier = Modifier.size(42.dp)
+                            color = SoftSage.copy(alpha = 0.7f),
+                            modifier = Modifier.size(44.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
@@ -172,7 +180,7 @@ fun NotificationsScreen(
                                 if (!notif.isRead) {
                                     Surface(
                                         shape = CircleShape,
-                                        color = EduTrackPrimary,
+                                        color = PrimaryForest,
                                         modifier = Modifier.size(8.dp)
                                     ) {}
                                 }

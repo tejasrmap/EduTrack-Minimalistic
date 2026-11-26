@@ -5,12 +5,15 @@ import androidx.compose.material3.Shapes
 import androidx.compose.ui.unit.dp
 
 // ==========================================
-// EduTrack 2.0 Shape Tokens (18-24dp cards)
+// Soft Academia Organic Shapes
+// - 28dp to 32dp large containers
+// - 24dp primary cards
+// - 18dp secondary cards / buttons
 // ==========================================
 val EduTrackShapes = Shapes(
-    extraSmall = RoundedCornerShape(8.dp),
-    small = RoundedCornerShape(12.dp),
-    medium = RoundedCornerShape(16.dp),
-    large = RoundedCornerShape(20.dp),      // Standard Card Radius (20dp)
-    extraLarge = RoundedCornerShape(24.dp)   // Dialogs, Sheets & Hero Cards (24dp)
+    extraSmall = RoundedCornerShape(10.dp),
+    small = RoundedCornerShape(14.dp),
+    medium = RoundedCornerShape(18.dp),     // Secondary cards / pills
+    large = RoundedCornerShape(24.dp),      // Primary cards
+    extraLarge = RoundedCornerShape(30.dp)  // Large containers & Bottom Navigation
 )

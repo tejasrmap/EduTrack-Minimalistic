@@ -5,7 +5,9 @@ import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material.icons.filled.Spa
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.ui.graphics.vector.ImageVector
 
@@ -52,10 +54,16 @@ sealed class BottomNavItem(
     val title: String,
     val icon: ImageVector
 ) {
-    object Dashboard : BottomNavItem("dashboard", "Dashboard", Icons.Default.Dashboard)
+    object Home : BottomNavItem("dashboard", "Home", Icons.Default.Home)
     object Subjects : BottomNavItem("subjects", "Subjects", Icons.AutoMirrored.Filled.MenuBook)
-    object Timer : BottomNavItem("timer", "Timer", Icons.Default.Timer)
+    object Focus : BottomNavItem("timer", "Focus", Icons.Default.Spa)
     object Planner : BottomNavItem("planner", "Planner", Icons.Default.CalendarMonth)
-    object Analytics : BottomNavItem("analytics", "Analytics", Icons.Default.BarChart)
     object More : BottomNavItem("more_menu", "More", Icons.Default.MoreHoriz)
+    object Analytics : BottomNavItem("analytics", "Analytics", Icons.Default.BarChart)
+
+    // Aliases for compatibility
+    companion object {
+        val Dashboard = Home
+        val Timer = Focus
+    }
 }

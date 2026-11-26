@@ -28,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,11 +45,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gtinnox.edutrack.ui.components.AcademicEmptyState
-import com.gtinnox.edutrack.ui.components.PremiumCard
-import com.gtinnox.edutrack.ui.components.SubjectChip
-import com.gtinnox.edutrack.ui.theme.EduTrackPrimary
-import com.gtinnox.edutrack.ui.theme.EduTrackPrimarySoft
-import com.gtinnox.edutrack.ui.theme.EduTrackSuccess
+import com.gtinnox.edutrack.ui.components.OrganicCard
+import com.gtinnox.edutrack.ui.theme.PrimaryForest
+import com.gtinnox.edutrack.ui.theme.SoftSage
+import com.gtinnox.edutrack.ui.theme.SoftSuccess
 import com.gtinnox.edutrack.ui.viewmodel.SubjectViewModel
 
 @Composable
@@ -70,10 +70,12 @@ fun SubjectsScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = 22.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Curriculum Header
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // Curriculum Header directly on background
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -81,33 +83,41 @@ fun SubjectsScreen(
         ) {
             Column {
                 Text(
-                    text = "Enrolled Curriculum",
+                    text = "ACADEMIC CURRICULUM",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        letterSpacing = 2.sp,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Enrolled Modules",
                     style = MaterialTheme.typography.headlineLarge,
                     color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = "${subjectsWithSessions.size} Active Academic Modules",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
             Button(
                 onClick = onNavigateToAdd,
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = EduTrackPrimary)
+                shape = RoundedCornerShape(18.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryForest),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
             ) {
-                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("Add Subject", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
+                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = "Add Subject",
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
+                )
             }
         }
 
-        // Search Bar
+        // Search Bar with 18dp corner radius
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
-            placeholder = { Text("Search by code, title, or instructor...") },
+            placeholder = { Text("Search by course code, name, or instructor...") },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Search,
@@ -116,7 +126,11 @@ fun SubjectsScreen(
                 )
             },
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(14.dp),
+            shape = RoundedCornerShape(18.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = PrimaryForest,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline
+            ),
             singleLine = true
         )
 
@@ -130,7 +144,7 @@ fun SubjectsScreen(
             )
         } else {
             LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(filteredList) { item ->
@@ -142,11 +156,12 @@ fun SubjectsScreen(
                     val subColor = try {
                         Color(android.graphics.Color.parseColor(subject.color))
                     } catch (e: Exception) {
-                        EduTrackPrimary
+                        PrimaryForest
                     }
 
-                    PremiumCard(
-                        contentPadding = 16.dp,
+                    OrganicCard(
+                        cornerRadius = 24.dp,
+                        contentPadding = 18.dp,
                         onClick = { onNavigateToDetail(subject.id) }
                     ) {
                         Row(
@@ -154,9 +169,9 @@ fun SubjectsScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = subColor.copy(alpha = 0.12f),
-                                modifier = Modifier.size(46.dp)
+                                shape = RoundedCornerShape(14.dp),
+                                color = subColor.copy(alpha = 0.14f),
+                                modifier = Modifier.size(48.dp)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     Text(
@@ -180,19 +195,20 @@ fun SubjectsScreen(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Surface(
-                                        shape = RoundedCornerShape(6.dp),
-                                        color = MaterialTheme.colorScheme.surfaceVariant
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = SoftSage.copy(alpha = 0.6f)
                                     ) {
                                         Text(
-                                            text = "${subject.weeklyTargetHours}h / week",
-                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            text = "${subject.weeklyTargetHours}h / wk",
+                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                            color = PrimaryForest,
+                                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
                                         )
                                     }
                                 }
 
                                 if (subject.instructor.isNotBlank()) {
+                                    Spacer(modifier = Modifier.height(2.dp))
                                     Text(
                                         text = "Prof. ${subject.instructor}",
                                         style = MaterialTheme.typography.bodySmall,
@@ -226,7 +242,7 @@ fun SubjectsScreen(
                                 text = "Target: ${subject.weeklyTargetHours}h (${(progress * 100).toInt()}%)",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontWeight = FontWeight.Bold,
-                                    color = if (progress >= 1f) EduTrackSuccess else EduTrackPrimary
+                                    color = if (progress >= 1f) SoftSuccess else PrimaryForest
                                 )
                             )
                         }
@@ -240,7 +256,7 @@ fun SubjectsScreen(
                                 .height(6.dp)
                                 .clip(RoundedCornerShape(3.dp)),
                             color = subColor,
-                            trackColor = subColor.copy(alpha = 0.15f)
+                            trackColor = SoftSage.copy(alpha = 0.6f)
                         )
                     }
                 }

@@ -7,58 +7,58 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-private val LightColorScheme = lightColorScheme(
-    primary = EduTrackPrimary,
+private val SoftAcademiaLightScheme = lightColorScheme(
+    primary = PrimaryForest,
     onPrimary = Color.White,
-    primaryContainer = EduTrackPrimarySoft,
-    onPrimaryContainer = EduTrackPrimaryDark,
-    secondary = EduTrackSuccess,
+    primaryContainer = SoftSage,
+    onPrimaryContainer = DeepForest,
+    secondary = SoftSuccess,
     onSecondary = Color.White,
-    secondaryContainer = EduTrackSuccessSoft,
-    onSecondaryContainer = EduTrackSuccess,
-    tertiary = EduTrackWarning,
+    secondaryContainer = MutedSage,
+    onSecondaryContainer = DeepForest,
+    tertiary = SoftWarning,
     onTertiary = Color.White,
-    tertiaryContainer = EduTrackWarningSoft,
-    onTertiaryContainer = EduTrackWarning,
-    background = EduTrackBackgroundLight,
-    onBackground = EduTrackTextPrimaryLight,
-    surface = EduTrackSurfaceLight,
-    onSurface = EduTrackTextPrimaryLight,
-    surfaceVariant = EduTrackSurfaceSecondary,
-    onSurfaceVariant = EduTrackTextSecondaryLight,
-    outline = EduTrackBorderLight,
-    outlineVariant = EduTrackBorderLight.copy(alpha = 0.5f),
-    error = EduTrackDanger,
+    tertiaryContainer = SoftTerracotta,
+    onTertiaryContainer = DeepForest,
+    background = WarmIvoryBackground,
+    onBackground = TextPrimary,
+    surface = WhiteSurface,
+    onSurface = TextPrimary,
+    surfaceVariant = MutedSage,
+    onSurfaceVariant = TextSecondary,
+    outline = SoftBorder,
+    outlineVariant = SoftBorder.copy(alpha = 0.5f),
+    error = SoftDanger,
     onError = Color.White,
-    errorContainer = EduTrackDangerSoft,
-    onErrorContainer = EduTrackDanger
+    errorContainer = Color(0xFFF7E8E8),
+    onErrorContainer = SoftDanger
 )
 
-private val DarkColorScheme = darkColorScheme(
-    primary = EduTrackPrimaryDarkTheme,
-    onPrimary = Color(0xFF15151D),
-    primaryContainer = EduTrackPrimarySoftDark,
-    onPrimaryContainer = Color(0xFFE9E7FF),
-    secondary = EduTrackSuccess,
-    onSecondary = Color.White,
-    secondaryContainer = Color(0xFF0F4335),
-    onSecondaryContainer = Color(0xFFA5F3DC),
-    tertiary = EduTrackWarning,
-    onTertiary = Color.White,
-    tertiaryContainer = Color(0xFF4E3710),
-    onTertiaryContainer = Color(0xFFFDE68A),
-    background = EduTrackBackgroundDark,
-    onBackground = EduTrackTextPrimaryDark,
-    surface = EduTrackSurfaceDark,
-    onSurface = EduTrackTextPrimaryDark,
-    surfaceVariant = EduTrackElevatedDark,
-    onSurfaceVariant = EduTrackTextSecondaryDark,
-    outline = EduTrackBorderDark,
-    outlineVariant = EduTrackBorderDark.copy(alpha = 0.5f),
-    error = EduTrackDanger,
+private val SoftAcademiaDarkScheme = darkColorScheme(
+    primary = DarkPrimary,
+    onPrimary = Color(0xFF171A18),
+    primaryContainer = DarkSoftAccent,
+    onPrimaryContainer = DarkText,
+    secondary = DarkPrimary,
+    onSecondary = Color(0xFF171A18),
+    secondaryContainer = DarkSoftAccent,
+    onSecondaryContainer = DarkText,
+    tertiary = SoftWarning,
+    onTertiary = Color(0xFF171A18),
+    tertiaryContainer = Color(0xFF3D2D1B),
+    onTertiaryContainer = SoftTerracotta,
+    background = DarkBackground,
+    onBackground = DarkText,
+    surface = DarkPrimarySurface,
+    onSurface = DarkText,
+    surfaceVariant = DarkElevatedSurface,
+    onSurfaceVariant = DarkSecondaryText,
+    outline = DarkBorder,
+    outlineVariant = DarkBorder.copy(alpha = 0.5f),
+    error = SoftDanger,
     onError = Color.White,
-    errorContainer = Color(0xFF4A1A22),
-    onErrorContainer = EduTrackDangerSoft
+    errorContainer = Color(0xFF452020),
+    onErrorContainer = Color(0xFFF7E8E8)
 )
 
 @Composable
@@ -66,7 +66,7 @@ fun EduTrackTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    val colorScheme = if (darkTheme) SoftAcademiaDarkScheme else SoftAcademiaLightScheme
 
     MaterialTheme(
         colorScheme = colorScheme,
