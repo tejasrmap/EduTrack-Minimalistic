@@ -207,3 +207,49 @@ Completely eliminated generic Material 3 boxes, congested card grids, and purple
     - Confirmed deletion: block removed with feedback.
     - Force-stopped app and restarted: verified all states persisted in Room database.
 - **Release APK**: Verified and packaged at `apk/EduTrack-Minimal-Native.apk` (18.50 MB).
+
+---
+
+## 7. Study Session History Layout Polish & Session Detail Loading Resolution (Design Version 2.3)
+
+### Bug 1: Study Session History Card Column Squeezing
+- **Root Cause Identified**:
+  - `HistoryScreen.kt` had split the card into multiple rigid horizontal columns.
+  - Timestamp ISO strings (e.g. `2026-11-25T09:00:00Z`) were displayed in a narrow separate column next to the delete button, causing date/time text to unnaturally wrap vertically character-by-character into multiple rows.
+  - Rigid `SubjectChip` pill elements forced horizontal compression on narrower screens.
+  - Prominent delete icon consumed card width.
+- **Fix & Architectural Enhancements**:
+  - **Responsive 3-Zone Card Layout**:
+    - **LEFT**: Consistent 46dp rounded pastel surface (`SoftSage`) with centered dark green `Icons.Default.Timer`.
+    - **CENTER**: Flexible `Modifier.weight(1f)` column with:
+      - Clean title: `${session.durationMinutes} min focus block`.
+      - Metadata line: `[XX% Focus] · Nov 25 · 9:00 AM` or `[XX% Focus] · Yesterday · 7:30 PM`, guaranteed single-line readable format.
+      - Subject tag: 7dp colored dot + `${subject.code} · ${subject.name}`, cleanly truncated with ellipsis without squeezing.
+      - Reflection notes: max 2 lines with ellipsis; omitted if blank.
+    - **RIGHT**: Compact 32dp three-dot overflow menu (`Icons.Default.MoreVert`).
+  - **Overflow Actions Menu & Safe Deletion**:
+    - Added Material 3 `DropdownMenu` with "View Details", "Edit Session", and "Delete Session".
+    - Added `AlertDialog` confirmation with clear explanation of study hours impact before permanent deletion.
+    - Added `formatSessionDateTime` utility with unit tests.
+
+### Bug 2: Session Detail Screen Infinite Loading Resolution
+- **Root Cause Identified**:
+  - In `SessionDetailScreen.kt`, `val sessionWithSubject by viewModel.getSessionWithSubject(sessionId).collectAsState()` called `.stateIn(...)` directly during composable evaluation without `remember`.
+  - On every composition pass, a new StateFlow was instantiated with initial `null`, preventing the state from ever transitioning out of loading.
+  - Tag pill in `SessionDetailScreen` had unbounded width, causing "DEEP WORK" to wrap vertically when adjacent to long course names.
+- **Fix & Architectural Enhancements**:
+  - Returned direct Room `Flow<SessionWithSubject?>` from `SessionViewModel.getSessionWithSubject`.
+  - Used `remember(sessionId) { viewModel.getSessionWithSubject(sessionId) }.collectAsState(initial = null)` in `SessionDetailScreen`, enabling Room emissions to update state immediately.
+  - Added `Modifier.weight(1f, fill = false)` to `SubjectChip` and `maxLines = 1` to session type pill, ensuring clean horizontal layout.
+  - Polished editorial header title to "Session Details", preventing truncation.
+
+### Live Emulator Verification & Test Results
+- **Unit Tests**: `CourseworkUnitTests` passed 7/7 tests (`BUILD SUCCESSFUL in 1m 27s`).
+- **Live Emulator Verification**:
+  - Verified on `emulator-5554`:
+    - Session history cards render cleanly with generous spacing, no squeezed columns or strange date wrapping.
+    - Tapping cards opens `SessionDetailScreen` instantly with complete focus time, focus score, and notes.
+    - 3-dot overflow menu opens with "View Details", "Edit Session", "Delete Session".
+    - Delete confirmation dialog displays properly with "Cancel" and "Delete Session" actions.
+    - "Cancel" preserves the session intact without unintended deletion.
+- **Updated APK**: Built and deployed to `apk/EduTrack-Minimal-Native.apk` (18.64 MB).

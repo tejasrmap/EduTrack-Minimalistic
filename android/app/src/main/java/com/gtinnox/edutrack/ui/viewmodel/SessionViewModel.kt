@@ -37,12 +37,8 @@ class SessionViewModel(
     private val _eventFlow = MutableSharedFlow<SessionUiEvent>()
     val eventFlow: SharedFlow<SessionUiEvent> = _eventFlow.asSharedFlow()
 
-    fun getSessionWithSubject(id: String): StateFlow<SessionWithSubject?> {
-        return repository.getSessionWithSubject(id).stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5000),
-            null
-        )
+    fun getSessionWithSubject(id: String): kotlinx.coroutines.flow.Flow<SessionWithSubject?> {
+        return repository.getSessionWithSubject(id)
     }
 
     fun saveSession(

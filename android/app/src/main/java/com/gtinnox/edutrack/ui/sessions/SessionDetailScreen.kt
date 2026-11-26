@@ -54,7 +54,9 @@ fun SessionDetailScreen(
     onNavigateToEdit: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val sessionWithSubject by viewModel.getSessionWithSubject(sessionId).collectAsState()
+    val sessionWithSubject by remember(sessionId) {
+        viewModel.getSessionWithSubject(sessionId)
+    }.collectAsState(initial = null)
     var showDeleteDialog by remember { mutableStateOf(false) }
     val horizontalPadding = adaptiveHorizontalPadding()
 
@@ -126,7 +128,7 @@ fun SessionDetailScreen(
         ) {
             // App Bar directly on background
             AcademicEditorialHeader(
-                title = "Study Session Record",
+                title = "Session Details",
                 category = "Session Audit",
                 onBackClick = onNavigateBack,
                 trailingAction = {
@@ -178,11 +180,18 @@ fun SessionDetailScreen(
                         SubjectChip(
                             name = subject.name,
                             code = subject.code,
-                            colorHex = subject.color
+                            colorHex = subject.color,
+                            modifier = Modifier.weight(1f, fill = false)
                         )
                     } else {
-                        Text("General Focus Block", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                        Text(
+                            text = "General Focus Block",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            modifier = Modifier.weight(1f, fill = false)
+                        )
                     }
+
+                    Spacer(modifier = Modifier.width(Dimens.spaceSmall))
 
                     Surface(
                         shape = RoundedCornerShape(Dimens.radiusChip),
@@ -194,6 +203,7 @@ fun SessionDetailScreen(
                                 fontWeight = FontWeight.Bold,
                                 color = PrimaryForest
                             ),
+                            maxLines = 1,
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                         )
                     }

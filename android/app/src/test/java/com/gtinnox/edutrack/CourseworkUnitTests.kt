@@ -81,4 +81,14 @@ class CourseworkUnitTests {
         assertFalse(validateScheduleEvent("Seminar", "subj-1", "11:00", "10:00"))
         assertFalse(validateScheduleEvent("Seminar", "subj-1", "10:00", "10:00"))
     }
+
+    @Test
+    fun testFormatSessionDateTime_doesNotCrash() {
+        val formatted = com.gtinnox.edutrack.ui.history.formatSessionDateTime("2026-11-25T09:00:00Z")
+        assertTrue("Formatted date time must not be blank", formatted.isNotBlank())
+        assertTrue("Must contain formatted time or date", formatted.contains("Nov 25") || formatted.contains("Today") || formatted.contains("Yesterday"))
+
+        val fallback = com.gtinnox.edutrack.ui.history.formatSessionDateTime("2026-11-25")
+        assertTrue(fallback.isNotBlank())
+    }
 }

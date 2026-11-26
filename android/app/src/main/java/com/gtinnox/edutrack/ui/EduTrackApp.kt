@@ -333,7 +333,11 @@ fun EduTrackApp(
                     viewModel = historyViewModel,
                     onNavigateToDetail = { sessId ->
                         navController.navigate(Screen.SessionDetail.createRoute(sessId))
-                    }
+                    },
+                    onNavigateToEdit = { sessId ->
+                        navController.navigate(Screen.AddEditSession.createRoute(sessionId = sessId))
+                    },
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
 
