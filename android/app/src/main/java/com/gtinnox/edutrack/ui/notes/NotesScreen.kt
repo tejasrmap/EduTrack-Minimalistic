@@ -155,7 +155,7 @@ fun NotesScreen(
                                 title = title,
                                 content = content,
                                 subjectId = subjectId,
-                                tags = tags.split(",").map { it.trim() }.filter { it.isNotBlank() }
+                                tags = tags
                             )
                             showAddDialog = false
                         }
@@ -227,7 +227,7 @@ fun NotesScreen(
             // Search Bar
             OutlinedTextField(
                 value = searchQuery,
-                onValueChange = { viewModel.setSearchQuery(it) },
+                onValueChange = { viewModel.setSearch(it) },
                 placeholder = { Text("Search syllabus notes, theorems, tags...") },
                 leadingIcon = {
                     Icon(
@@ -296,10 +296,11 @@ fun NotesScreen(
                                         )
                                     }
 
-                                    if (note.tags.isNotEmpty()) {
+                                    val tagList = note.tags.split(",").map { it.trim() }.filter { it.isNotBlank() }
+                                    if (tagList.isNotEmpty()) {
                                         Spacer(modifier = Modifier.height(8.dp))
                                         LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                            items(note.tags) { tag ->
+                                            items(tagList) { tag ->
                                                 Surface(
                                                     shape = RoundedCornerShape(8.dp),
                                                     color = SoftSage.copy(alpha = 0.6f)
@@ -322,9 +323,9 @@ fun NotesScreen(
                                         modifier = Modifier.size(28.dp)
                                     ) {
                                         Icon(
-                                            imageVector = if (note.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                            imageVector = if (note.isFavourite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                                             contentDescription = "Favorite",
-                                            tint = if (note.isFavorite) SoftTerracotta else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            tint = if (note.isFavourite) SoftTerracotta else MaterialTheme.colorScheme.onSurfaceVariant,
                                             modifier = Modifier.size(18.dp)
                                         )
                                     }
