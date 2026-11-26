@@ -63,6 +63,7 @@ fun DashboardScreen(
     viewModel: DashboardViewModel,
     onNavigateToTimer: (String?) -> Unit,
     onNavigateToSubject: (String) -> Unit,
+    onNavigateToSubjects: () -> Unit = {},
     onNavigateToAssignments: () -> Unit,
     onNavigateToExams: () -> Unit,
     onLogSession: () -> Unit,
@@ -242,7 +243,7 @@ fun DashboardScreen(
                     SectionHeader(
                         title = "Continue Studying",
                         actionText = "All Courses",
-                        onActionClick = { onNavigateToSubject("") }
+                        onActionClick = onNavigateToSubjects
                     )
                     Spacer(modifier = Modifier.height(Dimens.spaceSmall))
 

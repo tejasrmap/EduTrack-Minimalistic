@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.gtinnox.edutrack.data.local.entity.SubjectEntity
 import com.gtinnox.edutrack.data.local.relations.SubjectWithSessions
 import com.gtinnox.edutrack.data.repository.EduTrackRepository
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -12,10 +13,18 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.util.UUID
+
+sealed interface SubjectDetailUiState {
+    object Loading : SubjectDetailUiState
+    data class Success(val subjectWithSessions: SubjectWithSessions) : SubjectDetailUiState
+    object NotFound : SubjectDetailUiState
+    data class Error(val message: String) : SubjectDetailUiState
+}
 
 sealed class SubjectUiEvent {
     data class ShowSnackbar(val message: String) : SubjectUiEvent()
@@ -43,6 +52,37 @@ class SubjectViewModel(
 
     private val _eventFlow = MutableSharedFlow<SubjectUiEvent>()
     val eventFlow: SharedFlow<SubjectUiEvent> = _eventFlow.asSharedFlow()
+
+    private val _subjectDetailState = MutableStateFlow<SubjectDetailUiState>(SubjectDetailUiState.Loading)
+    val subjectDetailState: StateFlow<SubjectDetailUiState> = _subjectDetailState.asStateFlow()
+
+    private var detailJob: Job? = null
+
+    fun loadSubjectDetail(subjectId: String) {
+        detailJob?.cancel()
+        if (subjectId.isBlank()) {
+            _subjectDetailState.value = SubjectDetailUiState.NotFound
+            return
+        }
+        _subjectDetailState.value = SubjectDetailUiState.Loading
+        detailJob = viewModelScope.launch {
+            try {
+                repository.getSubjectWithSessions(subjectId)
+                    .catch { e ->
+                        _subjectDetailState.value = SubjectDetailUiState.Error(e.message ?: "Failed to load curriculum module")
+                    }
+                    .collect { result ->
+                        if (result != null) {
+                            _subjectDetailState.value = SubjectDetailUiState.Success(result)
+                        } else {
+                            _subjectDetailState.value = SubjectDetailUiState.NotFound
+                        }
+                    }
+            } catch (e: Exception) {
+                _subjectDetailState.value = SubjectDetailUiState.Error(e.message ?: "An unexpected error occurred")
+            }
+        }
+    }
 
     fun getSubjectWithSessions(subjectId: String): StateFlow<SubjectWithSessions?> {
         return repository.getSubjectWithSessions(subjectId).stateIn(

@@ -17,20 +17,25 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,8 +46,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.gtinnox.edutrack.ui.components.AcademicEditorialHeader
+import com.gtinnox.edutrack.ui.components.AcademicEmptyState
 import com.gtinnox.edutrack.ui.components.OrganicCard
 import com.gtinnox.edutrack.ui.components.SectionHeader
 import com.gtinnox.edutrack.ui.components.SubjectChip
@@ -52,6 +59,7 @@ import com.gtinnox.edutrack.ui.theme.SoftDanger
 import com.gtinnox.edutrack.ui.theme.SoftSage
 import com.gtinnox.edutrack.ui.theme.SoftSuccess
 import com.gtinnox.edutrack.ui.theme.adaptiveHorizontalPadding
+import com.gtinnox.edutrack.ui.viewmodel.SubjectDetailUiState
 import com.gtinnox.edutrack.ui.viewmodel.SubjectViewModel
 
 @Composable
@@ -63,79 +71,157 @@ fun SubjectDetailScreen(
     onNavigateToTimer: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val subjectWithSessions by viewModel.getSubjectWithSessions(subjectId).collectAsState()
+    LaunchedEffect(subjectId) {
+        viewModel.loadSubjectDetail(subjectId)
+    }
+
+    val uiState by viewModel.subjectDetailState.collectAsState()
     var showDeleteDialog by remember { mutableStateOf(false) }
     val horizontalPadding = adaptiveHorizontalPadding()
 
-    val data = subjectWithSessions
-
-    if (data == null) {
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(Dimens.spaceLarge),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text("Curriculum module loading...", style = MaterialTheme.typography.bodyLarge)
-            Spacer(modifier = Modifier.height(Dimens.spaceStandard))
-            Button(
-                onClick = onNavigateBack,
-                shape = RoundedCornerShape(Dimens.radiusMedium),
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryForest)
+    when (val state = uiState) {
+        is SubjectDetailUiState.Loading -> {
+            Box(
+                modifier = modifier
+                    .fillMaxSize()
+                    .padding(Dimens.spaceLarge),
+                contentAlignment = Alignment.Center
             ) {
-                Text("Return to Modules")
-            }
-        }
-        return
-    }
-
-    val subject = data.subject
-    val sessions = data.sessions
-    val totalMinutes = sessions.sumOf { it.durationMinutes }
-    val targetMinutes = (subject.weeklyTargetHours * 60).coerceAtLeast(1)
-    val progress = (totalMinutes.toFloat() / targetMinutes.toFloat()).coerceIn(0f, 1f)
-
-    val subColor = try {
-        Color(android.graphics.Color.parseColor(subject.color))
-    } catch (e: Exception) {
-        PrimaryForest
-    }
-
-    if (showDeleteDialog) {
-        AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
-            title = {
-                Text(
-                    "Delete Course Module?",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                )
-            },
-            text = { Text("Are you sure you want to remove '${subject.name}'? Associated study logs and deliverables will also be cleared.") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showDeleteDialog = false
-                        viewModel.deleteSubject(subject)
-                        onNavigateBack()
-                    }
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(Dimens.spaceMedium)
                 ) {
-                    Text("Delete Module", color = SoftDanger, fontWeight = FontWeight.Bold)
+                    CircularProgressIndicator(
+                        color = PrimaryForest,
+                        strokeWidth = 3.dp,
+                        modifier = Modifier.size(44.dp)
+                    )
+                    Text(
+                        text = "Loading curriculum module...",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(Dimens.spaceSmall))
+                    OutlinedButton(
+                        onClick = onNavigateBack,
+                        shape = RoundedCornerShape(Dimens.radiusMedium)
+                    ) {
+                        Text("Return to Modules")
+                    }
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel")
-                }
-            },
-            shape = RoundedCornerShape(Dimens.radiusLarge)
-        )
-    }
+            }
+            return
+        }
 
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.TopCenter
-    ) {
+        is SubjectDetailUiState.NotFound -> {
+            Box(
+                modifier = modifier
+                    .fillMaxSize()
+                    .padding(horizontal = horizontalPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                AcademicEmptyState(
+                    icon = Icons.AutoMirrored.Filled.MenuBook,
+                    title = "Curriculum Module Not Found",
+                    description = "The requested course module could not be found or may have been deleted.",
+                    actionText = "Return to Modules",
+                    onActionClick = onNavigateBack
+                )
+            }
+            return
+        }
+
+        is SubjectDetailUiState.Error -> {
+            Box(
+                modifier = modifier
+                    .fillMaxSize()
+                    .padding(Dimens.spaceLarge),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(Dimens.spaceMedium)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = "Error",
+                        tint = SoftDanger,
+                        modifier = Modifier.size(48.dp)
+                    )
+                    Text(
+                        text = state.message,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(Dimens.spaceMedium)) {
+                        Button(
+                            onClick = { viewModel.loadSubjectDetail(subjectId) },
+                            shape = RoundedCornerShape(Dimens.radiusMedium),
+                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryForest)
+                        ) {
+                            Text("Retry")
+                        }
+                        OutlinedButton(
+                            onClick = onNavigateBack,
+                            shape = RoundedCornerShape(Dimens.radiusMedium)
+                        ) {
+                            Text("Return to Modules")
+                        }
+                    }
+                }
+            }
+            return
+        }
+
+        is SubjectDetailUiState.Success -> {
+            val data = state.subjectWithSessions
+            val subject = data.subject
+            val sessions = data.sessions
+            val totalMinutes = sessions.sumOf { it.durationMinutes }
+            val targetMinutes = (subject.weeklyTargetHours * 60).coerceAtLeast(1)
+            val progress = (totalMinutes.toFloat() / targetMinutes.toFloat()).coerceIn(0f, 1f)
+
+            val subColor = try {
+                Color(android.graphics.Color.parseColor(subject.color))
+            } catch (e: Exception) {
+                PrimaryForest
+            }
+
+            if (showDeleteDialog) {
+                AlertDialog(
+                    onDismissRequest = { showDeleteDialog = false },
+                    title = {
+                        Text(
+                            "Delete Course Module?",
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                        )
+                    },
+                    text = { Text("Are you sure you want to remove '${subject.name}'? Associated study logs and deliverables will also be cleared.") },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                showDeleteDialog = false
+                                viewModel.deleteSubject(subject)
+                                onNavigateBack()
+                            }
+                        ) {
+                            Text("Delete Module", color = SoftDanger, fontWeight = FontWeight.Bold)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDeleteDialog = false }) {
+                            Text("Cancel")
+                        }
+                    },
+                    shape = RoundedCornerShape(Dimens.radiusLarge)
+                )
+            }
+
+            Box(
+                modifier = modifier.fillMaxSize(),
+                contentAlignment = Alignment.TopCenter
+            ) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -381,4 +467,6 @@ fun SubjectDetailScreen(
             }
         }
     }
+}
+}
 }

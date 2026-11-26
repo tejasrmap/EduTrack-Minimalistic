@@ -25,7 +25,10 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -34,6 +37,7 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -56,6 +60,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.gtinnox.edutrack.data.local.entity.ScheduleEventEntity
+import com.gtinnox.edutrack.data.local.entity.SubjectEntity
 import com.gtinnox.edutrack.ui.components.AcademicEditorialHeader
 import com.gtinnox.edutrack.ui.components.AcademicEmptyState
 import com.gtinnox.edutrack.ui.components.OrganicCard
@@ -69,7 +75,25 @@ import com.gtinnox.edutrack.ui.theme.adaptiveHorizontalPadding
 import com.gtinnox.edutrack.ui.viewmodel.PlannerViewModel
 import kotlinx.coroutines.flow.collectLatest
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
+
+fun formatBlockDuration(startTime: String, endTime: String): String {
+    return try {
+        val start = LocalTime.parse(startTime)
+        val end = LocalTime.parse(endTime)
+        val minutes = ChronoUnit.MINUTES.between(start, end)
+        if (minutes <= 0) return ""
+        val hrs = minutes / 60
+        val mins = minutes % 60
+        if (hrs > 0 && mins > 0) "${hrs}h ${mins}m"
+        else if (hrs > 0) "${hrs}h"
+        else "${mins}m"
+    } catch (e: Exception) {
+        ""
+    }
+}
 
 @Composable
 fun PlannerScreen(
@@ -84,6 +108,10 @@ fun PlannerScreen(
     val subjects by viewModel.subjects.collectAsState()
 
     var showAddDialog by remember { mutableStateOf(false) }
+    var editingEvent by remember { mutableStateOf<ScheduleEventEntity?>(null) }
+    var viewingEvent by remember { mutableStateOf<ScheduleEventEntity?>(null) }
+    var deletingEvent by remember { mutableStateOf<ScheduleEventEntity?>(null) }
+
     val snackbarHostState = remember { SnackbarHostState() }
     val horizontalPadding = adaptiveHorizontalPadding()
 
@@ -97,12 +125,15 @@ fun PlannerScreen(
     val today = LocalDate.now()
     val days = (0..13).map { today.plusDays(it.toLong()) }
 
+    // --- CREATE DIALOG ---
     if (showAddDialog) {
         var title by remember { mutableStateOf("") }
         var subjectId by remember { mutableStateOf(subjects.firstOrNull()?.id ?: "") }
+        var dateStr by remember { mutableStateOf(selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE)) }
         var startTime by remember { mutableStateOf("09:00") }
         var endTime by remember { mutableStateOf("10:30") }
         var desc by remember { mutableStateOf("") }
+        var validationError by remember { mutableStateOf<String?>(null) }
 
         AlertDialog(
             onDismissRequest = { showAddDialog = false },
@@ -114,11 +145,22 @@ fun PlannerScreen(
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(Dimens.spaceMedium)) {
+                    if (validationError != null) {
+                        Text(
+                            text = validationError ?: "",
+                            color = SoftDanger,
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold)
+                        )
+                    }
+
                     OutlinedTextField(
                         value = title,
-                        onValueChange = { title = it },
+                        onValueChange = {
+                            title = it
+                            validationError = null
+                        },
                         label = { Text("Block Title *") },
-                        placeholder = { Text("e.g. Distributed Systems Lecture") },
+                        placeholder = { Text("e.g. Distributed Systems Seminar") },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(Dimens.radiusMedium),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -128,7 +170,159 @@ fun PlannerScreen(
                     )
 
                     Text(
-                        "Target Subject",
+                        "Target Subject *",
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+                    )
+
+                    if (subjects.isEmpty()) {
+                        Text(
+                            "No subjects enrolled yet. Add a course first.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } else {
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            items(subjects) { s ->
+                                FilterChip(
+                                    selected = subjectId == s.id,
+                                    onClick = { subjectId = s.id },
+                                    label = { Text(s.code.ifBlank { s.name }) },
+                                    shape = RoundedCornerShape(Dimens.radiusChip),
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = SoftSage,
+                                        selectedLabelColor = PrimaryForest
+                                    )
+                                )
+                            }
+                        }
+                    }
+
+                    OutlinedTextField(
+                        value = dateStr,
+                        onValueChange = { dateStr = it },
+                        label = { Text("Date (YYYY-MM-DD)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(Dimens.radiusMedium)
+                    )
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(Dimens.spaceSmall)) {
+                        OutlinedTextField(
+                            value = startTime,
+                            onValueChange = {
+                                startTime = it
+                                validationError = null
+                            },
+                            label = { Text("Start (HH:mm)") },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(Dimens.radiusSmall)
+                        )
+                        OutlinedTextField(
+                            value = endTime,
+                            onValueChange = {
+                                endTime = it
+                                validationError = null
+                            },
+                            label = { Text("End (HH:mm)") },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(Dimens.radiusSmall)
+                        )
+                    }
+
+                    OutlinedTextField(
+                        value = desc,
+                        onValueChange = { desc = it },
+                        label = { Text("Location / Notes (Optional)") },
+                        placeholder = { Text("e.g. Hall 402 / Practice problem set") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(Dimens.radiusMedium)
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (title.isBlank()) {
+                            validationError = "Title is required"
+                            return@Button
+                        }
+                        if (subjectId.isBlank()) {
+                            validationError = "Please select a subject"
+                            return@Button
+                        }
+                        if (startTime.isNotBlank() && endTime.isNotBlank() && startTime >= endTime) {
+                            validationError = "End time must be after start time"
+                            return@Button
+                        }
+                        viewModel.addEvent(
+                            title = title,
+                            subjectId = subjectId,
+                            date = dateStr,
+                            startTime = startTime,
+                            endTime = endTime,
+                            description = desc
+                        )
+                        showAddDialog = false
+                    },
+                    shape = RoundedCornerShape(Dimens.radiusMedium),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryForest)
+                ) {
+                    Text("Schedule Block", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddDialog = false }) {
+                    Text("Cancel")
+                }
+            },
+            shape = RoundedCornerShape(Dimens.radiusLarge)
+        )
+    }
+
+    // --- UPDATE / EDIT DIALOG ---
+    editingEvent?.let { event ->
+        var title by remember(event.id) { mutableStateOf(event.title) }
+        var subjectId by remember(event.id) { mutableStateOf(event.subjectId) }
+        var dateStr by remember(event.id) { mutableStateOf(event.date) }
+        var startTime by remember(event.id) { mutableStateOf(event.startTime) }
+        var endTime by remember(event.id) { mutableStateOf(event.endTime) }
+        var desc by remember(event.id) { mutableStateOf(event.description) }
+        var validationError by remember { mutableStateOf<String?>(null) }
+
+        AlertDialog(
+            onDismissRequest = { editingEvent = null },
+            title = {
+                Text(
+                    text = "Edit Scheduled Block",
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.spaceMedium)) {
+                    if (validationError != null) {
+                        Text(
+                            text = validationError ?: "",
+                            color = SoftDanger,
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold)
+                        )
+                    }
+
+                    OutlinedTextField(
+                        value = title,
+                        onValueChange = {
+                            title = it
+                            validationError = null
+                        },
+                        label = { Text("Block Title *") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(Dimens.radiusMedium),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = PrimaryForest,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        )
+                    )
+
+                    Text(
+                        "Target Subject *",
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
                     )
 
@@ -147,18 +341,32 @@ fun PlannerScreen(
                         }
                     }
 
+                    OutlinedTextField(
+                        value = dateStr,
+                        onValueChange = { dateStr = it },
+                        label = { Text("Date (YYYY-MM-DD)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(Dimens.radiusMedium)
+                    )
+
                     Row(horizontalArrangement = Arrangement.spacedBy(Dimens.spaceSmall)) {
                         OutlinedTextField(
                             value = startTime,
-                            onValueChange = { startTime = it },
-                            label = { Text("Start") },
+                            onValueChange = {
+                                startTime = it
+                                validationError = null
+                            },
+                            label = { Text("Start (HH:mm)") },
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(Dimens.radiusSmall)
                         )
                         OutlinedTextField(
                             value = endTime,
-                            onValueChange = { endTime = it },
-                            label = { Text("End") },
+                            onValueChange = {
+                                endTime = it
+                                validationError = null
+                            },
+                            label = { Text("End (HH:mm)") },
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(Dimens.radiusSmall)
                         )
@@ -167,8 +375,8 @@ fun PlannerScreen(
                     OutlinedTextField(
                         value = desc,
                         onValueChange = { desc = it },
-                        label = { Text("Location / Chapter") },
-                        placeholder = { Text("Hall 402 / Review Lab") },
+                        label = { Text("Location / Notes") },
+                        placeholder = { Text("e.g. Hall 402 / Review session") },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(Dimens.radiusMedium)
                     )
@@ -177,26 +385,204 @@ fun PlannerScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        if (title.isNotBlank()) {
-                            viewModel.addEvent(
-                                title = title,
-                                subjectId = subjectId,
-                                date = selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
-                                startTime = startTime,
-                                endTime = endTime,
-                                description = desc
-                            )
-                            showAddDialog = false
+                        if (title.isBlank()) {
+                            validationError = "Title is required"
+                            return@Button
                         }
+                        if (subjectId.isBlank()) {
+                            validationError = "Please select a subject"
+                            return@Button
+                        }
+                        if (startTime.isNotBlank() && endTime.isNotBlank() && startTime >= endTime) {
+                            validationError = "End time must be after start time"
+                            return@Button
+                        }
+                        viewModel.updateEvent(
+                            id = event.id,
+                            title = title,
+                            subjectId = subjectId,
+                            date = dateStr,
+                            startTime = startTime,
+                            endTime = endTime,
+                            description = desc,
+                            isCompleted = event.isCompleted,
+                            createdAt = event.createdAt
+                        )
+                        editingEvent = null
                     },
                     shape = RoundedCornerShape(Dimens.radiusMedium),
                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryForest)
                 ) {
-                    Text("Schedule Block", fontWeight = FontWeight.Bold)
+                    Text("Save Changes", fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showAddDialog = false }) {
+                TextButton(onClick = { editingEvent = null }) {
+                    Text("Cancel")
+                }
+            },
+            shape = RoundedCornerShape(Dimens.radiusLarge)
+        )
+    }
+
+    // --- READ / FULL DETAILS DIALOG ---
+    viewingEvent?.let { event ->
+        val sub = subjects.find { it.id == event.subjectId }
+        val durationStr = formatBlockDuration(event.startTime, event.endTime)
+
+        AlertDialog(
+            onDismissRequest = { viewingEvent = null },
+            title = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Schedule Details",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                    )
+                    Surface(
+                        shape = RoundedCornerShape(Dimens.radiusChip),
+                        color = if (event.isCompleted) SoftSuccess.copy(alpha = 0.2f) else SoftSage
+                    ) {
+                        Text(
+                            text = if (event.isCompleted) "Completed" else "Scheduled",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = if (event.isCompleted) SoftSuccess else PrimaryForest
+                            ),
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                }
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.spaceMedium)) {
+                    Text(
+                        text = event.title,
+                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    if (sub != null) {
+                        SubjectChip(name = sub.name, colorHex = sub.color, code = sub.code)
+                    }
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.CalendarMonth,
+                            contentDescription = null,
+                            tint = PrimaryForest,
+                            modifier = Modifier.size(Dimens.iconSmall)
+                        )
+                        Spacer(modifier = Modifier.width(Dimens.spaceSmall))
+                        Text(
+                            text = event.date,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Schedule,
+                            contentDescription = null,
+                            tint = PrimaryForest,
+                            modifier = Modifier.size(Dimens.iconSmall)
+                        )
+                        Spacer(modifier = Modifier.width(Dimens.spaceSmall))
+                        Text(
+                            text = "${event.startTime} – ${event.endTime}${if (durationStr.isNotBlank()) " ($durationStr)" else ""}",
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                            color = PrimaryForest
+                        )
+                    }
+
+                    if (event.description.isNotBlank()) {
+                        Row(verticalAlignment = Alignment.Top) {
+                            Icon(
+                                imageVector = Icons.Default.Place,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(Dimens.iconSmall)
+                            )
+                            Spacer(modifier = Modifier.width(Dimens.spaceSmall))
+                            Text(
+                                text = event.description,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Row(horizontalArrangement = Arrangement.spacedBy(Dimens.spaceSmall)) {
+                    Button(
+                        onClick = {
+                            val target = event
+                            viewingEvent = null
+                            editingEvent = target
+                        },
+                        shape = RoundedCornerShape(Dimens.radiusMedium),
+                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryForest)
+                    ) {
+                        Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(Dimens.iconSmall))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Edit")
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            val target = event
+                            viewingEvent = null
+                            deletingEvent = target
+                        },
+                        shape = RoundedCornerShape(Dimens.radiusMedium),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = SoftDanger)
+                    ) {
+                        Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(Dimens.iconSmall))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Delete")
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewingEvent = null }) {
+                    Text("Close")
+                }
+            },
+            shape = RoundedCornerShape(Dimens.radiusLarge)
+        )
+    }
+
+    // --- DELETE CONFIRMATION DIALOG ---
+    deletingEvent?.let { event ->
+        AlertDialog(
+            onDismissRequest = { deletingEvent = null },
+            title = {
+                Text(
+                    text = "Delete Scheduled Block?",
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                )
+            },
+            text = {
+                Text(
+                    text = "Are you sure you want to remove '${event.title}' scheduled on ${event.date} (${event.startTime} - ${event.endTime})? This action cannot be undone."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.deleteEvent(event)
+                        deletingEvent = null
+                    }
+                ) {
+                    Text("Delete Block", color = SoftDanger, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { deletingEvent = null }) {
                     Text("Cancel")
                 }
             },
@@ -222,7 +608,7 @@ fun PlannerScreen(
                     .padding(horizontal = horizontalPadding),
                 verticalArrangement = Arrangement.spacedBy(Dimens.spaceStandard)
             ) {
-                // Header Row directly on background
+                // Header Row directly on background — Unified single primary Add Block button
                 AcademicEditorialHeader(
                     title = selectedDate.format(DateTimeFormatter.ofPattern("EEEE, MMM d")),
                     category = "Academic Timetable",
@@ -315,23 +701,27 @@ fun PlannerScreen(
 
                             OrganicCard(
                                 cornerRadius = Dimens.radiusMedium,
-                                contentPadding = Dimens.spaceStandard
+                                contentPadding = Dimens.spaceStandard,
+                                onClick = { viewingEvent = event }
                             ) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    // Complete / Incomplete Checkbox
-                                    Icon(
-                                        imageVector = if (isDone) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
-                                        contentDescription = "Toggle Complete",
-                                        tint = if (isDone) SoftSuccess else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier
-                                            .size(Dimens.iconStandard)
-                                            .clickable { viewModel.toggleEvent(event) }
-                                    )
+                                    // Complete / Incomplete Checkbox — Isolated click to avoid card opening
+                                    IconButton(
+                                        onClick = { viewModel.toggleEvent(event) },
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = if (isDone) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+                                            contentDescription = if (isDone) "Mark Incomplete" else "Mark Complete",
+                                            tint = if (isDone) SoftSuccess else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(Dimens.iconStandard)
+                                        )
+                                    }
 
-                                    Spacer(modifier = Modifier.width(Dimens.spaceMedium))
+                                    Spacer(modifier = Modifier.width(Dimens.spaceSmall))
 
                                     // Time Indicator
                                     Column(modifier = Modifier.width(76.dp)) {
@@ -377,9 +767,24 @@ fun PlannerScreen(
                                         }
                                     }
 
+                                    Spacer(modifier = Modifier.width(Dimens.spaceXSmall))
+
+                                    // Edit Action
+                                    IconButton(
+                                        onClick = { editingEvent = event },
+                                        modifier = Modifier.size(32.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Edit,
+                                            contentDescription = "Edit Event",
+                                            tint = PrimaryForest,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+
                                     // Delete Action
                                     IconButton(
-                                        onClick = { viewModel.deleteEvent(event) },
+                                        onClick = { deletingEvent = event },
                                         modifier = Modifier.size(32.dp)
                                     ) {
                                         Icon(

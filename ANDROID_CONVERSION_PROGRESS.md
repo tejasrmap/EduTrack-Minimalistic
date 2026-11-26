@@ -157,3 +157,53 @@ Completely eliminated generic Material 3 boxes, congested card grids, and purple
   - `AssignmentsScreen`, `ExaminationsScreen`, `GoalsScreen`: Clean status tabs, countdown badges in Soft Sage and Terracotta, progress indicators in Forest Green.
   - `NotesScreen`, `HistoryScreen`, `AnalyticsScreen`, `MoreMenuScreen`, `ProfileScreen`, `SettingsScreen`: Spacious organic cards, earth-tone category tags, and Canvas charts.
 - **Verification**: All unit tests pass (`5/5 passed`), build successful (`BUILD SUCCESSFUL in 22s`), verified debug APK generated at `apk/EduTrack-Minimal-Native.apk`.
+
+---
+
+## 6. Critical Bug Fix & Planner CRUD Completion (Design Version 2.2)
+
+### Bug 1: Curriculum Module Loading Screen Resolution
+- **Root Cause Identified**:
+  1. **Route mismatch in Dashboard**: The "All Courses" section action called `onNavigateToSubject("")` instead of navigating to `Screen.Subjects.route`. This caused Navigation Compose to route to `Screen.SubjectDetail` with an empty `subjectId = ""`.
+  2. **Indefinite loading state**: `SubjectDetailScreen` collected a raw `StateFlow` directly instantiated during recomposition, and treated `null` as "still loading" indefinitely, lacking explicit state-machine discrimination between loading, not found, success, and error.
+- **Fix & Architectural Enhancements**:
+  - Implemented `SubjectDetailUiState` (`Loading`, `Success`, `NotFound`, `Error`) with full lifecycle cancellation in `SubjectViewModel`.
+  - Added `loadSubjectDetail(subjectId)` with Room Flow collection, `.catch` block, and empty ID guards.
+  - Implemented comprehensive UI states in `SubjectDetailScreen`:
+    - `Loading`: Displays animated `CircularProgressIndicator` with "Loading curriculum module..." and "Return to Modules" action.
+    - `NotFound`: Displays `AcademicEmptyState` with book icon, informative message, and "Return to Modules" action.
+    - `Error`: Displays warning icon, error details, "Retry" button, and "Return to Modules".
+    - `Success`: Displays complete module statistics, weekly progress meter, enrolled sessions, and focus session launcher.
+  - Updated `DashboardScreen` and `EduTrackApp` to separate `onNavigateToSubjects` ("All Courses") and `onNavigateToSubject(id)` (individual course cards), preventing blank route navigation.
+
+### Bug 2: Planner Complete CRUD Implementation
+- **Create**:
+  - Implemented `showAddDialog` supporting title, subject filter chips, date selection, start time (`HH:mm`), end time (`HH:mm`), and location/notes.
+  - Added strict validation preventing invalid times (`startTime >= endTime`) and empty required fields.
+- **Read**:
+  - Filtered and chronological sorting (`events.filter { it.date == date }.sortedBy { it.startTime }`) ensuring only selected date blocks appear.
+  - Tapping a block opens the rich `EventDetailDialog` showing subject chip, duration (`1h 30m`), time interval, location, and status badge.
+- **Update**:
+  - Implemented `updateEvent` in `PlannerViewModel` and Room database.
+  - Added prefilled `EventEditDialog` accessible from the card or details modal, allowing modification of title, subject, date, times, and notes.
+- **Delete**:
+  - Added `EventDeleteConfirmationDialog` before permanent removal with clear warnings.
+  - Cancel preserves the scheduled event intact.
+  - Confirm triggers `viewModel.deleteEvent(event)` and displays Snackbar feedback ("Scheduled block removed").
+- **Isolated Completion**:
+  - Checkbox toggle is isolated on the card with dedicated touch bounds (`IconButton`), immediately updating `isCompleted` in Room without unintentionally opening the details modal.
+- **Removed Duplicate Add Actions**:
+  - Removed redundant Scaffold FAB on the Planner route; retained a single, prominent, editorial "+ Add Block" button in the header.
+
+### Live Emulator Verification & Test Results
+- **Unit Tests**: `CourseworkUnitTests` updated with schedule event validation logic; 100% pass (`6/6 passed`).
+- **Emulator Verification**:
+  - Tested on `emulator-5554`:
+    - Navigated from Dashboard "All Courses" and bottom navigation to Enrolled Modules without infinite loading.
+    - Opened "Algorithms & Data Structures" detail view: content loaded instantly and completely.
+    - Created schedule blocks, edited fields in prefilled modal, confirmed persistence.
+    - Toggled completion checkbox: immediate visual feedback with green checkmark.
+    - Tested delete cancellation: verified event preserved.
+    - Confirmed deletion: block removed with feedback.
+    - Force-stopped app and restarted: verified all states persisted in Room database.
+- **Release APK**: Verified and packaged at `apk/EduTrack-Minimal-Native.apk` (18.50 MB).

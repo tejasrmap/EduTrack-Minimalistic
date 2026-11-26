@@ -67,4 +67,18 @@ class CourseworkUnitTests {
         assertFalse(validateSession("subj-1", 0))
         assertFalse(validateSession("subj-1", -15))
     }
+
+    @Test
+    fun testScheduleEventValidationLogic() {
+        fun validateScheduleEvent(title: String, subjectId: String, startTime: String, endTime: String): Boolean {
+            return title.isNotBlank() && subjectId.isNotBlank() && startTime.isNotBlank() && endTime.isNotBlank() && startTime < endTime
+        }
+
+        assertTrue(validateScheduleEvent("Algorithms Lecture", "subj-1", "09:00", "10:30"))
+        assertTrue(validateScheduleEvent("Lab Session", "subj-2", "14:00", "16:00"))
+        assertFalse(validateScheduleEvent("", "subj-1", "09:00", "10:30"))
+        assertFalse(validateScheduleEvent("Seminar", "", "09:00", "10:30"))
+        assertFalse(validateScheduleEvent("Seminar", "subj-1", "11:00", "10:00"))
+        assertFalse(validateScheduleEvent("Seminar", "subj-1", "10:00", "10:00"))
+    }
 }

@@ -154,7 +154,7 @@ fun EduTrackApp(
             }
         },
         floatingActionButton = {
-            if (isTopLevel && currentRoute != Screen.Timer.route) {
+            if (isTopLevel && currentRoute != Screen.Timer.route && currentRoute != Screen.Planner.route) {
                 FloatingActionButton(
                     onClick = { showQuickAdd = true },
                     containerColor = PrimaryForest,
@@ -182,7 +182,14 @@ fun EduTrackApp(
                         navController.navigate(Screen.Timer.route)
                     },
                     onNavigateToSubject = { subId ->
-                        navController.navigate(Screen.SubjectDetail.createRoute(subId))
+                        if (subId.isNotBlank()) {
+                            navController.navigate(Screen.SubjectDetail.createRoute(subId))
+                        } else {
+                            navController.navigate(Screen.Subjects.route)
+                        }
+                    },
+                    onNavigateToSubjects = {
+                        navController.navigate(Screen.Subjects.route)
                     },
                     onNavigateToAssignments = {
                         navController.navigate(Screen.Assignments.route)

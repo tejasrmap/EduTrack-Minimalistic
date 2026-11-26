@@ -36,7 +36,7 @@ class PlannerViewModel(
         repository.allEvents,
         _selectedDate
     ) { events, date ->
-        events.filter { it.date == date || events.size < 5 }
+        events.filter { it.date == date }.sortedBy { it.startTime }
     }.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
@@ -63,6 +63,10 @@ class PlannerViewModel(
                 _eventFlow.emit("Please enter a title and select a subject")
                 return@launch
             }
+            if (startTime.isNotBlank() && endTime.isNotBlank() && startTime >= endTime) {
+                _eventFlow.emit("End time must be after start time")
+                return@launch
+            }
             val event = ScheduleEventEntity(
                 id = "event-${UUID.randomUUID().toString().take(8)}",
                 title = title.trim(),
@@ -77,6 +81,43 @@ class PlannerViewModel(
             )
             repository.insertEvent(event)
             _eventFlow.emit("Scheduled session added")
+        }
+    }
+
+    fun updateEvent(
+        id: String,
+        title: String,
+        subjectId: String,
+        date: String,
+        startTime: String,
+        endTime: String,
+        description: String = "",
+        isCompleted: Boolean = false,
+        createdAt: String? = null
+    ) {
+        viewModelScope.launch {
+            if (title.isBlank() || subjectId.isBlank()) {
+                _eventFlow.emit("Please enter a title and select a subject")
+                return@launch
+            }
+            if (startTime.isNotBlank() && endTime.isNotBlank() && startTime >= endTime) {
+                _eventFlow.emit("End time must be after start time")
+                return@launch
+            }
+            val event = ScheduleEventEntity(
+                id = id,
+                title = title.trim(),
+                subjectId = subjectId,
+                date = date,
+                startTime = startTime.ifBlank { "09:00" },
+                endTime = endTime.ifBlank { "10:30" },
+                description = description.trim(),
+                reminder = true,
+                isCompleted = isCompleted,
+                createdAt = createdAt ?: Instant.now().toString()
+            )
+            repository.updateEvent(event)
+            _eventFlow.emit("Scheduled session updated")
         }
     }
 
