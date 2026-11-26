@@ -1,18 +1,14 @@
 package com.gtinnox.edutrack.ui
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,10 +23,11 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.gtinnox.edutrack.data.repository.EduTrackRepository
-import com.gtinnox.edutrack.ui.theme.PrimaryForest
 import com.gtinnox.edutrack.ui.analytics.AnalyticsScreen
 import com.gtinnox.edutrack.ui.assignments.AssignmentsScreen
-import com.gtinnox.edutrack.ui.components.AcademicHeader
+import com.gtinnox.edutrack.ui.auth.LoginScreen
+import com.gtinnox.edutrack.ui.auth.SignUpScreen
+import com.gtinnox.edutrack.ui.auth.WelcomeScreen
 import com.gtinnox.edutrack.ui.components.EduTrackBottomBar
 import com.gtinnox.edutrack.ui.components.GlobalSearchDialog
 import com.gtinnox.edutrack.ui.components.QuickAddBottomSheet
@@ -51,10 +48,11 @@ import com.gtinnox.edutrack.ui.settings.SettingsScreen
 import com.gtinnox.edutrack.ui.subjects.AddEditSubjectScreen
 import com.gtinnox.edutrack.ui.subjects.SubjectDetailScreen
 import com.gtinnox.edutrack.ui.subjects.SubjectsScreen
-import com.gtinnox.edutrack.ui.theme.AcademicIndigo
+import com.gtinnox.edutrack.ui.theme.PrimaryForest
 import com.gtinnox.edutrack.ui.timer.TimerScreen
 import com.gtinnox.edutrack.ui.viewmodel.AnalyticsViewModel
 import com.gtinnox.edutrack.ui.viewmodel.AssignmentViewModel
+import com.gtinnox.edutrack.ui.viewmodel.AuthViewModel
 import com.gtinnox.edutrack.ui.viewmodel.DashboardViewModel
 import com.gtinnox.edutrack.ui.viewmodel.ExamViewModel
 import com.gtinnox.edutrack.ui.viewmodel.GoalViewModel
@@ -71,6 +69,7 @@ import com.gtinnox.edutrack.ui.viewmodel.TimerViewModel
 @Composable
 fun EduTrackApp(
     repository: EduTrackRepository,
+    authViewModel: AuthViewModel,
     dashboardViewModel: DashboardViewModel,
     subjectViewModel: SubjectViewModel,
     sessionViewModel: SessionViewModel,
@@ -90,12 +89,15 @@ fun EduTrackApp(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    val currentUserId by authViewModel.currentUserId.collectAsState()
+    val currentUser by authViewModel.currentUser.collectAsState()
+    val isAuthenticated = !currentUserId.isNullOrBlank()
+
     var showQuickAdd by remember { mutableStateOf(false) }
     var showGlobalSearch by remember { mutableStateOf(false) }
 
     val allSubjects by subjectViewModel.allSubjects.collectAsState()
     val allTasks by assignmentViewModel.filteredTasks.collectAsState()
-    val allExams by examViewModel.subjects.collectAsState()
     val allNotes by noteViewModel.filteredNotes.collectAsState()
     val notifications by repository.allNotifications.collectAsState(initial = emptyList())
     val unreadCount = notifications.count { !it.isRead }
@@ -109,6 +111,17 @@ fun EduTrackApp(
         "more_menu"
     )
     val isTopLevel = currentRoute in topLevelRoutes
+
+    // Calculate initial launch destination based on authentication & onboarding status
+    val startDestination = remember {
+        if (!isAuthenticated) {
+            Screen.Welcome.route
+        } else if (currentUser?.isOnboardingCompleted == false) {
+            Screen.Onboarding.route
+        } else {
+            Screen.Dashboard.route
+        }
+    }
 
     if (showQuickAdd) {
         QuickAddBottomSheet(
@@ -169,11 +182,59 @@ fun EduTrackApp(
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Dashboard.route,
+            startDestination = startDestination,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
+            // --- AUTHENTICATION FLOW ---
+            composable(Screen.Welcome.route) {
+                WelcomeScreen(
+                    onNavigateToSignUp = { navController.navigate(Screen.SignUp.route) },
+                    onNavigateToLogin = { navController.navigate(Screen.Login.route) }
+                )
+            }
+
+            composable(Screen.Login.route) {
+                LoginScreen(
+                    viewModel = authViewModel,
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToSignUp = { navController.navigate(Screen.SignUp.route) },
+                    onLoginSuccess = { isCompleted ->
+                        val target = if (isCompleted) Screen.Dashboard.route else Screen.Onboarding.route
+                        navController.navigate(target) {
+                            popUpTo(Screen.Welcome.route) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
+            composable(Screen.SignUp.route) {
+                SignUpScreen(
+                    viewModel = authViewModel,
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToLogin = { navController.navigate(Screen.Login.route) },
+                    onSignUpSuccess = {
+                        navController.navigate(Screen.Onboarding.route) {
+                            popUpTo(Screen.Welcome.route) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
+            // --- ONBOARDING WIZARD ---
+            composable(Screen.Onboarding.route) {
+                OnboardingScreen(
+                    viewModel = onboardingViewModel,
+                    onFinish = {
+                        navController.navigate(Screen.Dashboard.route) {
+                            popUpTo(Screen.Onboarding.route) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
+            // --- MAIN APPLICATION SCREENS ---
             composable(Screen.Dashboard.route) {
                 DashboardScreen(
                     viewModel = dashboardViewModel,
@@ -351,7 +412,15 @@ fun EduTrackApp(
             composable(Screen.Profile.route) {
                 ProfileScreen(
                     viewModel = profileViewModel,
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
+                    onLogout = {
+                        authViewModel.logout {
+                            navController.navigate(Screen.Welcome.route) {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        }
+                    }
                 )
             }
 
@@ -359,17 +428,6 @@ fun EduTrackApp(
                 SettingsScreen(
                     viewModel = settingsViewModel,
                     onNavigateBack = { navController.popBackStack() }
-                )
-            }
-
-            composable(Screen.Onboarding.route) {
-                OnboardingScreen(
-                    viewModel = onboardingViewModel,
-                    onFinish = {
-                        navController.navigate(Screen.Dashboard.route) {
-                            popUpTo(Screen.Onboarding.route) { inclusive = true }
-                        }
-                    }
                 )
             }
         }

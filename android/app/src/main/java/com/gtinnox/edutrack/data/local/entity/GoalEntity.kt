@@ -1,12 +1,17 @@
 package com.gtinnox.edutrack.data.local.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "goals")
+@Entity(
+    tableName = "goals",
+    indices = [Index(value = ["userId"])]
+)
 data class GoalEntity(
     @PrimaryKey
     val id: String,
+    val userId: String = "default-user",
     val title: String,
     val type: String, // 'daily_study', 'weekly_study', 'monthly_study', 'subject_target', 'assignment_completion', 'exam_prep'
     val subjectId: String? = null,

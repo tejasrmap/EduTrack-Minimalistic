@@ -2,125 +2,115 @@ package com.gtinnox.edutrack.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.gtinnox.edutrack.data.local.entity.UserProfileEntity
+import com.gtinnox.edutrack.data.auth.AuthRepository
+import com.gtinnox.edutrack.data.local.entity.AcademicProfileEntity
+import com.gtinnox.edutrack.data.local.entity.StudyPreferencesEntity
+import com.gtinnox.edutrack.data.local.entity.UserAccountEntity
 import com.gtinnox.edutrack.data.repository.EduTrackRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.time.Instant
-
-data class ScholarPersona(
-    val name: String,
-    val email: String,
-    val university: String,
-    val program: String,
-    val academicYear: String,
-    val semester: String,
-    val preferredStudyHours: Int,
-    val avatar: String
-)
 
 class ProfileViewModel(
-    private val repository: EduTrackRepository
+    private val authRepository: AuthRepository,
+    private val academicRepository: EduTrackRepository
 ) : ViewModel() {
 
-    val userProfile: StateFlow<UserProfileEntity?> = repository.userProfile.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5000),
-        null
-    )
+    val currentUser: StateFlow<UserAccountEntity?> = authRepository.currentUserId.flatMapLatest { uid ->
+        if (uid.isNullOrBlank()) flowOf(null)
+        else authRepository.getCurrentUser()
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val currentProfile: StateFlow<AcademicProfileEntity?> = authRepository.currentUserId.flatMapLatest { uid ->
+        if (uid.isNullOrBlank()) flowOf(null)
+        else authRepository.getAcademicProfile(uid)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val currentPreferences: StateFlow<StudyPreferencesEntity?> = authRepository.currentUserId.flatMapLatest { uid ->
+        if (uid.isNullOrBlank()) flowOf(null)
+        else authRepository.getStudyPreferences(uid)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     private val _eventFlow = MutableSharedFlow<String>()
     val eventFlow: SharedFlow<String> = _eventFlow.asSharedFlow()
 
-    val personas = listOf(
-        ScholarPersona(
-            name = "Julian Vance",
-            email = "julian.vance@university.edu",
-            university = "Oxford University / Institute of Technology",
-            program = "B.Sc. Computer Science & Mathematics",
-            academicYear = "Year 2 (Sophomore)",
-            semester = "Fall Semester 2026",
-            preferredStudyHours = 25,
-            avatar = "JV"
-        ),
-        ScholarPersona(
-            name = "Elena Rostova",
-            email = "elena.rostova@cambridge.ac.uk",
-            university = "University of Cambridge",
-            program = "M.Sc. Artificial Intelligence & Cognitive Systems",
-            academicYear = "Master's Candidate",
-            semester = "Michaelmas Term 2026",
-            preferredStudyHours = 32,
-            avatar = "ER"
-        ),
-        ScholarPersona(
-            name = "Marcus Sterling",
-            email = "m.sterling@harvard.edu",
-            university = "Harvard Medical Sciences",
-            program = "Pre-Med Cellular & Molecular Biology",
-            academicYear = "Junior (Year 3)",
-            semester = "Fall 2026",
-            preferredStudyHours = 35,
-            avatar = "MS"
-        )
-    )
-
-    fun applyPersona(persona: ScholarPersona) {
-        viewModelScope.launch {
-            val entity = UserProfileEntity(
-                id = "user-default-1",
-                name = persona.name,
-                email = persona.email,
-                university = persona.university,
-                program = persona.program,
-                academicYear = persona.academicYear,
-                semester = persona.semester,
-                preferredStudyHours = persona.preferredStudyHours,
-                dailyTargetMinutes = persona.preferredStudyHours * 60 / 7,
-                avatar = persona.avatar,
-                isOnboarded = true,
-                createdAt = Instant.now().toString()
-            )
-            repository.updateProfile(entity)
-            _eventFlow.emit("Active scholar persona switched to ${persona.name}")
-        }
-    }
-
     fun updateProfile(
         name: String,
-        email: String,
         university: String,
         program: String,
         academicYear: String,
         semester: String,
-        preferredStudyHours: Int
+        studentId: String? = null
     ) {
+        val uid = authRepository.currentUserId.value ?: return
         viewModelScope.launch {
-            if (name.isBlank() || university.isBlank()) {
-                _eventFlow.emit("Please enter your name and university")
-                return@launch
-            }
-            val entity = UserProfileEntity(
-                id = "user-default-1",
-                name = name.trim(),
-                email = email.trim(),
-                university = university.trim(),
-                program = program.trim(),
+            authRepository.updateFullName(uid, name)
+            val existing = authRepository.getAcademicProfileDirect(uid)
+            val updated = (existing ?: AcademicProfileEntity(userId = uid, updatedAt = "")).copy(
+                institution = university.trim(),
+                degree = program.trim(),
+                major = program.trim(),
                 academicYear = academicYear.trim(),
                 semester = semester.trim(),
-                preferredStudyHours = preferredStudyHours,
-                dailyTargetMinutes = preferredStudyHours * 60 / 7,
-                avatar = name.split(" ").mapNotNull { it.firstOrNull()?.toString() }.take(2).joinToString("").uppercase(),
-                isOnboarded = true,
-                createdAt = Instant.now().toString()
+                studentId = studentId?.trim()?.ifBlank { null }
             )
-            repository.updateProfile(entity)
-            _eventFlow.emit("Scholar profile updated")
+            authRepository.saveAcademicProfile(updated)
+            _eventFlow.emit("Profile updated successfully")
         }
+    }
+
+    fun updatePreferences(
+        dailyTargetMinutes: Int,
+        weeklyHours: Int
+    ) {
+        val uid = authRepository.currentUserId.value ?: return
+        viewModelScope.launch {
+            val existing = authRepository.getStudyPreferencesDirect(uid)
+            val updated = (existing ?: StudyPreferencesEntity(userId = uid, updatedAt = "")).copy(
+                dailyStudyGoalMinutes = dailyTargetMinutes,
+                weeklyStudyGoalHours = weeklyHours
+            )
+            authRepository.saveStudyPreferences(updated)
+            _eventFlow.emit("Study preferences updated")
+        }
+    }
+
+    fun changePassword(
+        currentPass: String,
+        newPass: String,
+        confirmPass: String,
+        onSuccess: () -> Unit
+    ) {
+        val uid = authRepository.currentUserId.value ?: return
+        viewModelScope.launch {
+            when (val res = authRepository.changePassword(uid, currentPass, newPass, confirmPass)) {
+                is com.gtinnox.edutrack.data.auth.AuthResult.Success -> {
+                    _eventFlow.emit("Password changed successfully")
+                    onSuccess()
+                }
+                is com.gtinnox.edutrack.data.auth.AuthResult.Error -> {
+                    _eventFlow.emit(res.message)
+                }
+            }
+        }
+    }
+
+    fun resetTutorials() {
+        val uid = authRepository.currentUserId.value ?: return
+        viewModelScope.launch {
+            authRepository.resetAllTutorials(uid)
+            _eventFlow.emit("Tutorials reset. Guided tours will appear on key screens.")
+        }
+    }
+
+    fun logout(onLoggedOut: () -> Unit) {
+        authRepository.logout()
+        onLoggedOut()
     }
 }

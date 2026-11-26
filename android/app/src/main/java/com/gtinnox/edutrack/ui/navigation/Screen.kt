@@ -12,6 +12,9 @@ import androidx.compose.material.icons.filled.Timer
 import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class Screen(val route: String) {
+    object Welcome : Screen("welcome")
+    object Login : Screen("login")
+    object SignUp : Screen("signup")
     object Dashboard : Screen("dashboard")
     object Subjects : Screen("subjects")
     object SubjectDetail : Screen("subjects/{subjectId}") {

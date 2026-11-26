@@ -18,10 +18,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Spa
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
@@ -32,6 +36,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,11 +47,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.gtinnox.edutrack.ui.components.EduTrackCoachMark
 import com.gtinnox.edutrack.ui.components.PriorityChip
 import com.gtinnox.edutrack.ui.components.SectionHeader
 import com.gtinnox.edutrack.ui.components.SoftAcademiaWeeklyActivity
 import com.gtinnox.edutrack.ui.components.SoftSageFocusSummary
 import com.gtinnox.edutrack.ui.components.SubjectCleanRow
+import com.gtinnox.edutrack.ui.components.TutorialStep
 import com.gtinnox.edutrack.ui.theme.DeepForest
 import com.gtinnox.edutrack.ui.theme.Dimens
 import com.gtinnox.edutrack.ui.theme.PrimaryForest
@@ -81,7 +91,13 @@ fun DashboardScreen(
         else -> "Good evening"
     }
 
-    val firstName = profile?.name?.split(" ")?.firstOrNull() ?: "Scholar"
+    val firstName = uiState.userName.split(" ").firstOrNull()?.ifBlank { "Scholar" } ?: "Scholar"
+    val initials = uiState.userName.split(" ")
+        .filter { it.isNotBlank() }
+        .take(2)
+        .map { it.first().uppercase() }
+        .joinToString("")
+        .ifBlank { "SC" }
     val dateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, MMMM d"))
     val horizontalPadding = adaptiveHorizontalPadding()
     val isCompact = isCompactScreen()
@@ -178,7 +194,7 @@ fun DashboardScreen(
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     Text(
-                                        text = profile?.avatar ?: "SC",
+                                        text = initials,
                                         style = MaterialTheme.typography.labelMedium.copy(
                                             fontWeight = FontWeight.Bold,
                                             color = DeepForest
@@ -211,11 +227,58 @@ fun DashboardScreen(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = profile?.program ?: "Computer Science & Mathematics",
+                        text = uiState.userProgram,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
+            // Contextual First-Time Dashboard Tutorial
+            if (uiState.showTutorial) {
+                item {
+                    var currentStep by remember { mutableIntStateOf(0) }
+                    val tutorialSteps = listOf(
+                        TutorialStep(
+                            title = "Welcome to EduTrack!",
+                            description = "Your dashboard gives you a quick overview of your study progress, daily targets, and enrolled course tasks.",
+                            icon = Icons.Default.Spa
+                        ),
+                        TutorialStep(
+                            title = "Daily Focus Progress",
+                            description = "Track your active study hours against your goal, keep streak momentum, and tap 'Start Focus' to launch a pomodoro session.",
+                            icon = Icons.Default.Timer
+                        ),
+                        TutorialStep(
+                            title = "Weekly Study Telemetry",
+                            description = "Visualize your study minutes across Monday to Sunday to balance your academic preparation.",
+                            icon = Icons.Default.BarChart
+                        ),
+                        TutorialStep(
+                            title = "Continuing Courses & Planner",
+                            description = "Select any enrolled subject to review lecture sessions, or schedule upcoming exams and revision blocks.",
+                            icon = Icons.AutoMirrored.Filled.MenuBook
+                        )
+                    )
+
+                    EduTrackCoachMark(
+                        steps = tutorialSteps,
+                        currentStepIndex = currentStep,
+                        onNext = {
+                            if (currentStep < tutorialSteps.size - 1) {
+                                currentStep++
+                            } else {
+                                viewModel.markTutorialCompleted()
+                            }
+                        },
+                        onPrevious = {
+                            if (currentStep > 0) currentStep--
+                        },
+                        onSkip = {
+                            viewModel.markTutorialCompleted()
+                        }
                     )
                 }
             }

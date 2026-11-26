@@ -13,6 +13,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface SubjectDao {
+    @Query("SELECT * FROM subjects WHERE userId = :userId ORDER BY name ASC")
+    fun getSubjectsForUser(userId: String): Flow<List<SubjectEntity>>
+
     @Query("SELECT * FROM subjects ORDER BY name ASC")
     fun getAllSubjects(): Flow<List<SubjectEntity>>
 
@@ -25,6 +28,10 @@ interface SubjectDao {
     @Transaction
     @Query("SELECT * FROM subjects WHERE id = :id LIMIT 1")
     fun getSubjectWithSessions(id: String): Flow<SubjectWithSessions?>
+
+    @Transaction
+    @Query("SELECT * FROM subjects WHERE userId = :userId ORDER BY name ASC")
+    fun getSubjectsWithSessionsForUser(userId: String): Flow<List<SubjectWithSessions>>
 
     @Transaction
     @Query("SELECT * FROM subjects ORDER BY name ASC")
@@ -44,6 +51,9 @@ interface SubjectDao {
 
     @Query("DELETE FROM subjects WHERE id = :id")
     suspend fun deleteSubjectById(id: String)
+
+    @Query("SELECT COUNT(*) FROM subjects WHERE userId = :userId")
+    suspend fun getSubjectCountForUser(userId: String): Int
 
     @Query("SELECT COUNT(*) FROM subjects")
     suspend fun getSubjectCount(): Int

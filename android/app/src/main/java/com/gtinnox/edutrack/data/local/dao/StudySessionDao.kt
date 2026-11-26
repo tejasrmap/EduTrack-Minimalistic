@@ -13,8 +13,15 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface StudySessionDao {
+    @Query("SELECT * FROM study_sessions WHERE userId = :userId ORDER BY startTime DESC")
+    fun getSessionsForUser(userId: String): Flow<List<StudySessionEntity>>
+
     @Query("SELECT * FROM study_sessions ORDER BY startTime DESC")
     fun getAllSessions(): Flow<List<StudySessionEntity>>
+
+    @Transaction
+    @Query("SELECT * FROM study_sessions WHERE userId = :userId ORDER BY startTime DESC")
+    fun getSessionsWithSubjectForUser(userId: String): Flow<List<SessionWithSubject>>
 
     @Transaction
     @Query("SELECT * FROM study_sessions ORDER BY startTime DESC")
@@ -23,6 +30,9 @@ interface StudySessionDao {
     @Transaction
     @Query("SELECT * FROM study_sessions WHERE id = :id LIMIT 1")
     fun getSessionWithSubject(id: String): Flow<SessionWithSubject?>
+
+    @Query("SELECT * FROM study_sessions WHERE subjectId = :subjectId AND userId = :userId ORDER BY startTime DESC")
+    fun getSessionsForSubjectAndUser(subjectId: String, userId: String): Flow<List<StudySessionEntity>>
 
     @Query("SELECT * FROM study_sessions WHERE subjectId = :subjectId ORDER BY startTime DESC")
     fun getSessionsForSubject(subjectId: String): Flow<List<StudySessionEntity>>
@@ -45,11 +55,20 @@ interface StudySessionDao {
     @Query("DELETE FROM study_sessions WHERE id = :id")
     suspend fun deleteSessionById(id: String)
 
+    @Query("SELECT SUM(durationMinutes) FROM study_sessions WHERE userId = :userId")
+    fun getTotalStudyMinutesForUser(userId: String): Flow<Int?>
+
     @Query("SELECT SUM(durationMinutes) FROM study_sessions")
     fun getTotalStudyMinutes(): Flow<Int?>
 
+    @Query("SELECT SUM(durationMinutes) FROM study_sessions WHERE subjectId = :subjectId AND userId = :userId")
+    fun getStudyMinutesForSubjectAndUser(subjectId: String, userId: String): Flow<Int?>
+
     @Query("SELECT SUM(durationMinutes) FROM study_sessions WHERE subjectId = :subjectId")
     fun getStudyMinutesForSubject(subjectId: String): Flow<Int?>
+
+    @Query("SELECT COUNT(*) FROM study_sessions WHERE userId = :userId")
+    suspend fun getSessionCountForUser(userId: String): Int
 
     @Query("SELECT COUNT(*) FROM study_sessions")
     suspend fun getSessionCount(): Int

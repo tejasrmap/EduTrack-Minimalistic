@@ -4,6 +4,8 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.os.Build
+import com.gtinnox.edutrack.data.auth.AuthRepository
+import com.gtinnox.edutrack.data.auth.SessionManager
 import com.gtinnox.edutrack.data.local.database.EduTrackDatabase
 import com.gtinnox.edutrack.data.repository.EduTrackRepository
 import kotlinx.coroutines.CoroutineScope
@@ -15,7 +17,16 @@ class EduTrackApplication : Application() {
     val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     val database by lazy { EduTrackDatabase.getDatabase(this, applicationScope) }
-    val repository by lazy { EduTrackRepository(database) }
+    val sessionManager by lazy { SessionManager(this) }
+    val authRepository by lazy {
+        AuthRepository(
+            database.userAccountDao(),
+            database.academicProfileDao(),
+            database.studyPreferencesDao(),
+            sessionManager
+        )
+    }
+    val repository by lazy { EduTrackRepository(database, sessionManager) }
 
     override fun onCreate() {
         super.onCreate()

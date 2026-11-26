@@ -1,6 +1,7 @@
 package com.gtinnox.edutrack.data.repository
 
 import com.google.gson.Gson
+import com.gtinnox.edutrack.data.auth.SessionManager
 import com.gtinnox.edutrack.data.local.database.DatabaseSeed
 import com.gtinnox.edutrack.data.local.database.EduTrackDatabase
 import com.gtinnox.edutrack.data.local.entity.ExaminationEntity
@@ -14,11 +15,17 @@ import com.gtinnox.edutrack.data.local.entity.TaskEntity
 import com.gtinnox.edutrack.data.local.entity.UserProfileEntity
 import com.gtinnox.edutrack.data.local.relations.SessionWithSubject
 import com.gtinnox.edutrack.data.local.relations.SubjectWithSessions
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import java.time.Instant
-import java.time.LocalDate
 
-class EduTrackRepository(private val database: EduTrackDatabase) {
+@OptIn(ExperimentalCoroutinesApi::class)
+class EduTrackRepository(
+    private val database: EduTrackDatabase,
+    private val sessionManager: SessionManager? = null
+) {
 
     private val subjectDao = database.subjectDao()
     private val sessionDao = database.studySessionDao()
@@ -30,40 +37,98 @@ class EduTrackRepository(private val database: EduTrackDatabase) {
     private val notifDao = database.notificationDao()
     private val profileDao = database.userProfileDao()
 
+    fun getActiveUserId(): String = sessionManager?.getActiveUserId() ?: "default-user"
+
+    val currentUserId: Flow<String?> = sessionManager?.currentUserId ?: flowOf("default-user")
+
     // --- Subjects ---
-    val allSubjects: Flow<List<SubjectEntity>> = subjectDao.getAllSubjects()
-    val allSubjectsWithSessions: Flow<List<SubjectWithSessions>> = subjectDao.getAllSubjectsWithSessions()
+    val allSubjects: Flow<List<SubjectEntity>> = currentUserId.flatMapLatest { uid ->
+        if (uid.isNullOrBlank()) flowOf(emptyList())
+        else subjectDao.getSubjectsForUser(uid)
+    }
+
+    val allSubjectsWithSessions: Flow<List<SubjectWithSessions>> = currentUserId.flatMapLatest { uid ->
+        if (uid.isNullOrBlank()) flowOf(emptyList())
+        else subjectDao.getSubjectsWithSessionsForUser(uid)
+    }
 
     fun getSubjectById(id: String): Flow<SubjectEntity?> = subjectDao.getSubjectById(id)
     fun getSubjectWithSessions(id: String): Flow<SubjectWithSessions?> = subjectDao.getSubjectWithSessions(id)
 
-    suspend fun insertSubject(subject: SubjectEntity) = subjectDao.insertSubject(subject)
+    suspend fun insertSubject(subject: SubjectEntity) {
+        val uid = getActiveUserId()
+        val stamped = if (subject.userId.isBlank() || subject.userId == "default-user") subject.copy(userId = uid) else subject
+        subjectDao.insertSubject(stamped)
+    }
+
+    suspend fun insertSubjects(subjects: List<SubjectEntity>) {
+        val uid = getActiveUserId()
+        val stamped = subjects.map { if (it.userId.isBlank() || it.userId == "default-user") it.copy(userId = uid) else it }
+        subjectDao.insertSubjects(stamped)
+    }
+
     suspend fun updateSubject(subject: SubjectEntity) = subjectDao.updateSubject(subject)
     suspend fun deleteSubject(subject: SubjectEntity) = subjectDao.deleteSubject(subject)
     suspend fun deleteSubjectById(id: String) = subjectDao.deleteSubjectById(id)
 
     // --- Study Sessions ---
-    val allSessions: Flow<List<StudySessionEntity>> = sessionDao.getAllSessions()
-    val allSessionsWithSubject: Flow<List<SessionWithSubject>> = sessionDao.getAllSessionsWithSubject()
-    val totalStudyMinutes: Flow<Int?> = sessionDao.getTotalStudyMinutes()
+    val allSessions: Flow<List<StudySessionEntity>> = currentUserId.flatMapLatest { uid ->
+        if (uid.isNullOrBlank()) flowOf(emptyList())
+        else sessionDao.getSessionsForUser(uid)
+    }
+
+    val allSessionsWithSubject: Flow<List<SessionWithSubject>> = currentUserId.flatMapLatest { uid ->
+        if (uid.isNullOrBlank()) flowOf(emptyList())
+        else sessionDao.getSessionsWithSubjectForUser(uid)
+    }
+
+    val totalStudyMinutes: Flow<Int?> = currentUserId.flatMapLatest { uid ->
+        if (uid.isNullOrBlank()) flowOf(0)
+        else sessionDao.getTotalStudyMinutesForUser(uid)
+    }
 
     fun getSessionById(id: String): Flow<StudySessionEntity?> = sessionDao.getSessionById(id)
     fun getSessionWithSubject(id: String): Flow<SessionWithSubject?> = sessionDao.getSessionWithSubject(id)
-    fun getSessionsForSubject(subjectId: String): Flow<List<StudySessionEntity>> = sessionDao.getSessionsForSubject(subjectId)
-    fun getStudyMinutesForSubject(subjectId: String): Flow<Int?> = sessionDao.getStudyMinutesForSubject(subjectId)
 
-    suspend fun insertSession(session: StudySessionEntity) = sessionDao.insertSession(session)
+    fun getSessionsForSubject(subjectId: String): Flow<List<StudySessionEntity>> {
+        val uid = getActiveUserId()
+        return sessionDao.getSessionsForSubjectAndUser(subjectId, uid)
+    }
+
+    fun getStudyMinutesForSubject(subjectId: String): Flow<Int?> {
+        val uid = getActiveUserId()
+        return sessionDao.getStudyMinutesForSubjectAndUser(subjectId, uid)
+    }
+
+    suspend fun insertSession(session: StudySessionEntity) {
+        val uid = getActiveUserId()
+        val stamped = if (session.userId.isBlank() || session.userId == "default-user") session.copy(userId = uid) else session
+        sessionDao.insertSession(stamped)
+    }
+
     suspend fun updateSession(session: StudySessionEntity) = sessionDao.updateSession(session)
     suspend fun deleteSession(session: StudySessionEntity) = sessionDao.deleteSession(session)
     suspend fun deleteSessionById(id: String) = sessionDao.deleteSessionById(id)
 
     // --- Tasks / Assignments ---
-    val allTasks: Flow<List<TaskEntity>> = taskDao.getAllTasks()
+    val allTasks: Flow<List<TaskEntity>> = currentUserId.flatMapLatest { uid ->
+        if (uid.isNullOrBlank()) flowOf(emptyList())
+        else taskDao.getTasksForUser(uid)
+    }
 
-    fun getTasksForSubject(subjectId: String): Flow<List<TaskEntity>> = taskDao.getTasksForSubject(subjectId)
+    fun getTasksForSubject(subjectId: String): Flow<List<TaskEntity>> {
+        val uid = getActiveUserId()
+        return taskDao.getTasksForSubjectAndUser(subjectId, uid)
+    }
+
     fun getTaskById(id: String): Flow<TaskEntity?> = taskDao.getTaskById(id)
 
-    suspend fun insertTask(task: TaskEntity) = taskDao.insertTask(task)
+    suspend fun insertTask(task: TaskEntity) {
+        val uid = getActiveUserId()
+        val stamped = if (task.userId.isBlank() || task.userId == "default-user") task.copy(userId = uid) else task
+        taskDao.insertTask(stamped)
+    }
+
     suspend fun updateTask(task: TaskEntity) = taskDao.updateTask(task)
     suspend fun deleteTask(task: TaskEntity) = taskDao.deleteTask(task)
     suspend fun deleteTaskById(id: String) = taskDao.deleteTaskById(id)
@@ -74,22 +139,42 @@ class EduTrackRepository(private val database: EduTrackDatabase) {
     }
 
     // --- Examinations ---
-    val allExaminations: Flow<List<ExaminationEntity>> = examDao.getAllExaminations()
+    val allExaminations: Flow<List<ExaminationEntity>> = currentUserId.flatMapLatest { uid ->
+        if (uid.isNullOrBlank()) flowOf(emptyList())
+        else examDao.getExaminationsForUser(uid)
+    }
 
-    fun getExaminationsForSubject(subjectId: String): Flow<List<ExaminationEntity>> = examDao.getExaminationsForSubject(subjectId)
+    fun getExaminationsForSubject(subjectId: String): Flow<List<ExaminationEntity>> {
+        val uid = getActiveUserId()
+        return examDao.getExaminationsForSubjectAndUser(subjectId, uid)
+    }
+
     fun getExaminationById(id: String): Flow<ExaminationEntity?> = examDao.getExaminationById(id)
 
-    suspend fun insertExamination(exam: ExaminationEntity) = examDao.insertExamination(exam)
+    suspend fun insertExamination(exam: ExaminationEntity) {
+        val uid = getActiveUserId()
+        val stamped = if (exam.userId.isBlank() || exam.userId == "default-user") exam.copy(userId = uid) else exam
+        examDao.insertExamination(stamped)
+    }
+
     suspend fun updateExamination(exam: ExaminationEntity) = examDao.updateExamination(exam)
     suspend fun deleteExamination(exam: ExaminationEntity) = examDao.deleteExamination(exam)
     suspend fun deleteExaminationById(id: String) = examDao.deleteExaminationById(id)
 
     // --- Goals ---
-    val allGoals: Flow<List<GoalEntity>> = goalDao.getAllGoals()
+    val allGoals: Flow<List<GoalEntity>> = currentUserId.flatMapLatest { uid ->
+        if (uid.isNullOrBlank()) flowOf(emptyList())
+        else goalDao.getGoalsForUser(uid)
+    }
 
     fun getGoalById(id: String): Flow<GoalEntity?> = goalDao.getGoalById(id)
 
-    suspend fun insertGoal(goal: GoalEntity) = goalDao.insertGoal(goal)
+    suspend fun insertGoal(goal: GoalEntity) {
+        val uid = getActiveUserId()
+        val stamped = if (goal.userId.isBlank() || goal.userId == "default-user") goal.copy(userId = uid) else goal
+        goalDao.insertGoal(stamped)
+    }
+
     suspend fun updateGoal(goal: GoalEntity) = goalDao.updateGoal(goal)
     suspend fun deleteGoal(goal: GoalEntity) = goalDao.deleteGoal(goal)
     suspend fun deleteGoalById(id: String) = goalDao.deleteGoalById(id)
@@ -100,12 +185,24 @@ class EduTrackRepository(private val database: EduTrackDatabase) {
     }
 
     // --- Notes ---
-    val activeNotes: Flow<List<NoteEntity>> = noteDao.getActiveNotes()
-    val allNotes: Flow<List<NoteEntity>> = noteDao.getAllNotes()
+    val activeNotes: Flow<List<NoteEntity>> = currentUserId.flatMapLatest { uid ->
+        if (uid.isNullOrBlank()) flowOf(emptyList())
+        else noteDao.getActiveNotesForUser(uid)
+    }
+
+    val allNotes: Flow<List<NoteEntity>> = currentUserId.flatMapLatest { uid ->
+        if (uid.isNullOrBlank()) flowOf(emptyList())
+        else noteDao.getAllNotesForUser(uid)
+    }
 
     fun getNoteById(id: String): Flow<NoteEntity?> = noteDao.getNoteById(id)
 
-    suspend fun insertNote(note: NoteEntity) = noteDao.insertNote(note)
+    suspend fun insertNote(note: NoteEntity) {
+        val uid = getActiveUserId()
+        val stamped = if (note.userId.isBlank() || note.userId == "default-user") note.copy(userId = uid) else note
+        noteDao.insertNote(stamped)
+    }
+
     suspend fun updateNote(note: NoteEntity) = noteDao.updateNote(note)
     suspend fun deleteNote(note: NoteEntity) = noteDao.deleteNote(note)
     suspend fun deleteNoteById(id: String) = noteDao.deleteNoteById(id)
@@ -114,28 +211,53 @@ class EduTrackRepository(private val database: EduTrackDatabase) {
     suspend fun archiveNote(note: NoteEntity) = noteDao.updateNote(note.copy(isArchived = true))
 
     // --- Schedule Events ---
-    val allEvents: Flow<List<ScheduleEventEntity>> = eventDao.getAllEvents()
+    val allEvents: Flow<List<ScheduleEventEntity>> = currentUserId.flatMapLatest { uid ->
+        if (uid.isNullOrBlank()) flowOf(emptyList())
+        else eventDao.getEventsForUser(uid)
+    }
 
-    fun getEventsForDate(date: String): Flow<List<ScheduleEventEntity>> = eventDao.getEventsForDate(date)
+    fun getEventsForDate(date: String): Flow<List<ScheduleEventEntity>> {
+        val uid = getActiveUserId()
+        return eventDao.getEventsForDateAndUser(date, uid)
+    }
 
-    suspend fun insertEvent(event: ScheduleEventEntity) = eventDao.insertEvent(event)
+    suspend fun insertEvent(event: ScheduleEventEntity) {
+        val uid = getActiveUserId()
+        val stamped = if (event.userId.isBlank() || event.userId == "default-user") event.copy(userId = uid) else event
+        eventDao.insertEvent(stamped)
+    }
+
     suspend fun updateEvent(event: ScheduleEventEntity) = eventDao.updateEvent(event)
     suspend fun deleteEvent(event: ScheduleEventEntity) = eventDao.deleteEvent(event)
     suspend fun deleteEventById(id: String) = eventDao.deleteEventById(id)
     suspend fun toggleEventCompleted(event: ScheduleEventEntity) = eventDao.updateEvent(event.copy(isCompleted = !event.isCompleted))
 
     // --- Notifications ---
-    val allNotifications: Flow<List<NotificationEntity>> = notifDao.getAllNotifications()
+    val allNotifications: Flow<List<NotificationEntity>> = currentUserId.flatMapLatest { uid ->
+        if (uid.isNullOrBlank()) flowOf(emptyList())
+        else notifDao.getNotificationsForUser(uid)
+    }
 
-    suspend fun insertNotification(item: NotificationEntity) = notifDao.insertNotification(item)
+    suspend fun insertNotification(item: NotificationEntity) {
+        val uid = getActiveUserId()
+        val stamped = if (item.userId.isBlank() || item.userId == "default-user") item.copy(userId = uid) else item
+        notifDao.insertNotification(stamped)
+    }
+
     suspend fun markNotificationRead(id: String) = notifDao.markAsRead(id)
-    suspend fun markAllNotificationsRead() = notifDao.markAllAsRead()
+    suspend fun markAllNotificationsRead() {
+        val uid = getActiveUserId()
+        notifDao.markAllAsReadForUser(uid)
+    }
+
     suspend fun deleteNotification(id: String) = notifDao.deleteNotification(id)
-    suspend fun clearAllNotifications() = notifDao.clearAllNotifications()
+    suspend fun clearAllNotifications() {
+        val uid = getActiveUserId()
+        notifDao.clearAllNotificationsForUser(uid)
+    }
 
-    // --- User Profile ---
+    // --- User Profile (Legacy compatibility) ---
     val userProfile: Flow<UserProfileEntity?> = profileDao.getUserProfile()
-
     suspend fun getUserProfileDirect(): UserProfileEntity? = profileDao.getUserProfileDirect()
     suspend fun updateProfile(profile: UserProfileEntity) = profileDao.insertOrUpdate(profile)
     suspend fun setOnboarded(id: String, isOnboarded: Boolean) = profileDao.setOnboarded(id, isOnboarded)
@@ -209,5 +331,24 @@ class EduTrackRepository(private val database: EduTrackDatabase) {
         } catch (e: Exception) {
             false
         }
+    }
+
+    suspend fun seedAcademicStarterDataForUser(userId: String) {
+        val subjects = DatabaseSeed.initialSubjects.map { it.copy(userId = userId) }
+        subjectDao.insertSubjects(subjects)
+        val sessions = DatabaseSeed.initialSessions.map { it.copy(userId = userId) }
+        sessionDao.insertSessions(sessions)
+        val tasks = DatabaseSeed.initialTasks.map { it.copy(userId = userId) }
+        taskDao.insertTasks(tasks)
+        val exams = DatabaseSeed.initialExams.map { it.copy(userId = userId) }
+        examDao.insertExaminations(exams)
+        val goals = DatabaseSeed.initialGoals.map { it.copy(userId = userId) }
+        goalDao.insertGoals(goals)
+        val notes = DatabaseSeed.initialNotes.map { it.copy(userId = userId) }
+        noteDao.insertNotes(notes)
+        val events = DatabaseSeed.initialEvents.map { it.copy(userId = userId) }
+        eventDao.insertEvents(events)
+        val notifications = DatabaseSeed.initialNotifications.map { it.copy(userId = userId) }
+        notifDao.insertNotifications(notifications)
     }
 }

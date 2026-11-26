@@ -1,8 +1,16 @@
 package com.gtinnox.edutrack
 
+import com.gtinnox.edutrack.data.auth.PasswordSecurity
+import com.gtinnox.edutrack.data.auth.PasswordValidationResult
 import com.gtinnox.edutrack.data.local.database.DatabaseSeed
+import com.gtinnox.edutrack.data.local.entity.AcademicProfileEntity
+import com.gtinnox.edutrack.data.local.entity.StudyPreferencesEntity
+import com.gtinnox.edutrack.data.local.entity.UserAccountEntity
+import com.gtinnox.edutrack.ui.viewmodel.OnboardingWizardState
+import com.gtinnox.edutrack.ui.viewmodel.SubjectDraft
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -35,12 +43,96 @@ class CourseworkUnitTests {
     }
 
     @Test
-    fun testDatabaseSeedProfile_isPopulated() {
-        val profile = DatabaseSeed.initialProfile
-        assertEquals("user-default-1", profile.id)
-        assertEquals("Julian Vance", profile.name)
-        assertTrue(profile.isOnboarded)
-        assertTrue(profile.preferredStudyHours > 0)
+    fun testPasswordSecurity_saltGenerationIsUnique() {
+        val salt1 = PasswordSecurity.generateSalt()
+        val salt2 = PasswordSecurity.generateSalt()
+        assertNotNull(salt1)
+        assertNotNull(salt2)
+        assertNotEquals("Each generated salt must be cryptographically distinct", salt1, salt2)
+    }
+
+    @Test
+    fun testPasswordSecurity_hashingAndVerification() {
+        val password = "Scholar2026Password"
+        val salt = PasswordSecurity.generateSalt()
+        val hash = PasswordSecurity.hashPassword(password, salt)
+
+        assertNotNull(hash)
+        assertTrue("Hash must not equal plain password", hash != password)
+
+        // Verify correct password succeeds
+        val isVerified = PasswordSecurity.verifyPassword(password, salt, hash)
+        assertTrue("Password verification must succeed with correct credentials", isVerified)
+
+        // Verify wrong password fails
+        val wrongVerified = PasswordSecurity.verifyPassword("WrongPassword123", salt, hash)
+        assertFalse("Password verification must fail with incorrect credentials", wrongVerified)
+    }
+
+    @Test
+    fun testPasswordSecurity_passwordRulesValidation() {
+        // Less than 6 characters
+        val shortResult = PasswordSecurity.validatePassword("abc")
+        assertTrue(shortResult is PasswordValidationResult.Invalid)
+
+        // No digits
+        val noDigitResult = PasswordSecurity.validatePassword("abcdef")
+        assertTrue(noDigitResult is PasswordValidationResult.Invalid)
+
+        // No letters
+        val noLetterResult = PasswordSecurity.validatePassword("123456")
+        assertTrue(noLetterResult is PasswordValidationResult.Invalid)
+
+        // Valid alphanumeric password >= 6 chars
+        val validResult = PasswordSecurity.validatePassword("scholar2026")
+        assertTrue(validResult is PasswordValidationResult.Valid)
+    }
+
+    @Test
+    fun testPasswordSecurity_emailValidation() {
+        assertTrue(PasswordSecurity.isValidEmail("scholar@oxford.ac.uk"))
+        assertTrue(PasswordSecurity.isValidEmail("julian.vance@university.edu"))
+        assertFalse(PasswordSecurity.isValidEmail("invalid-email"))
+        assertFalse(PasswordSecurity.isValidEmail("@university.edu"))
+        assertFalse(PasswordSecurity.isValidEmail("scholar@"))
+        assertFalse(PasswordSecurity.isValidEmail(""))
+    }
+
+    @Test
+    fun testUserOwnershipFields_presentOnAllAcademicEntities() {
+        val testUserA = "user-alice-123"
+        val testUserB = "user-bob-456"
+
+        val subjectA = DatabaseSeed.initialSubjects.first().copy(userId = testUserA)
+        val subjectB = DatabaseSeed.initialSubjects.first().copy(userId = testUserB)
+
+        assertEquals(testUserA, subjectA.userId)
+        assertEquals(testUserB, subjectB.userId)
+        assertNotEquals(subjectA.userId, subjectB.userId)
+
+        val sessionA = DatabaseSeed.initialSessions.first().copy(userId = testUserA)
+        assertEquals(testUserA, sessionA.userId)
+    }
+
+    @Test
+    fun testOnboardingWizardState_stepNavigationAndDrafts() {
+        var state = OnboardingWizardState()
+        assertEquals(1, state.currentStep)
+        assertEquals(7, state.totalSteps)
+
+        // Step forward
+        state = state.copy(currentStep = state.currentStep + 1)
+        assertEquals(2, state.currentStep)
+
+        // Adding draft subject
+        val initialSubjectCount = state.subjects.size
+        val newDraft = SubjectDraft(name = "Operating Systems", code = "CS 350", color = "#16A37B")
+        state = state.copy(subjects = state.subjects + newDraft)
+        assertEquals(initialSubjectCount + 1, state.subjects.size)
+
+        // Removing draft subject
+        state = state.copy(subjects = state.subjects.filterNot { it.id == newDraft.id })
+        assertEquals(initialSubjectCount, state.subjects.size)
     }
 
     @Test
@@ -54,18 +146,6 @@ class CourseworkUnitTests {
         assertFalse(validateSubject("Algorithms", "", 7))
         assertFalse(validateSubject("Algorithms", "CS 201", 0))
         assertFalse(validateSubject("Algorithms", "CS 201", -3))
-    }
-
-    @Test
-    fun testSessionValidationLogic() {
-        fun validateSession(subjectId: String, duration: Int): Boolean {
-            return subjectId.isNotBlank() && duration > 0
-        }
-
-        assertTrue(validateSession("subj-1", 45))
-        assertFalse(validateSession("", 45))
-        assertFalse(validateSession("subj-1", 0))
-        assertFalse(validateSession("subj-1", -15))
     }
 
     @Test

@@ -11,6 +11,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface GoalDao {
+    @Query("SELECT * FROM goals WHERE userId = :userId ORDER BY targetDate ASC")
+    fun getGoalsForUser(userId: String): Flow<List<GoalEntity>>
+
     @Query("SELECT * FROM goals ORDER BY targetDate ASC")
     fun getAllGoals(): Flow<List<GoalEntity>>
 

@@ -11,8 +11,14 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ScheduleEventDao {
+    @Query("SELECT * FROM schedule_events WHERE userId = :userId ORDER BY date ASC, startTime ASC")
+    fun getEventsForUser(userId: String): Flow<List<ScheduleEventEntity>>
+
     @Query("SELECT * FROM schedule_events ORDER BY date ASC, startTime ASC")
     fun getAllEvents(): Flow<List<ScheduleEventEntity>>
+
+    @Query("SELECT * FROM schedule_events WHERE date = :date AND userId = :userId ORDER BY startTime ASC")
+    fun getEventsForDateAndUser(date: String, userId: String): Flow<List<ScheduleEventEntity>>
 
     @Query("SELECT * FROM schedule_events WHERE date = :date ORDER BY startTime ASC")
     fun getEventsForDate(date: String): Flow<List<ScheduleEventEntity>>

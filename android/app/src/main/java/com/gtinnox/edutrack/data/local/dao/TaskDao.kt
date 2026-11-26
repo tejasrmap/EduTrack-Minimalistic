@@ -11,8 +11,14 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TaskDao {
+    @Query("SELECT * FROM tasks WHERE userId = :userId ORDER BY dueDate ASC, dueTime ASC")
+    fun getTasksForUser(userId: String): Flow<List<TaskEntity>>
+
     @Query("SELECT * FROM tasks ORDER BY dueDate ASC, dueTime ASC")
     fun getAllTasks(): Flow<List<TaskEntity>>
+
+    @Query("SELECT * FROM tasks WHERE subjectId = :subjectId AND userId = :userId ORDER BY dueDate ASC")
+    fun getTasksForSubjectAndUser(subjectId: String, userId: String): Flow<List<TaskEntity>>
 
     @Query("SELECT * FROM tasks WHERE subjectId = :subjectId ORDER BY dueDate ASC")
     fun getTasksForSubject(subjectId: String): Flow<List<TaskEntity>>
@@ -37,6 +43,9 @@ interface TaskDao {
 
     @Query("UPDATE tasks SET status = :status, completedAt = :completedAt WHERE id = :id")
     suspend fun updateTaskStatus(id: String, status: String, completedAt: String?)
+
+    @Query("SELECT COUNT(*) FROM tasks WHERE userId = :userId")
+    suspend fun getTaskCountForUser(userId: String): Int
 
     @Query("SELECT COUNT(*) FROM tasks")
     suspend fun getTaskCount(): Int

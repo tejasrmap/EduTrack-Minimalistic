@@ -2,16 +2,20 @@ package com.gtinnox.edutrack.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.gtinnox.edutrack.data.auth.AuthRepository
 import com.gtinnox.edutrack.data.repository.EduTrackRepository
 
 class ViewModelFactory(
-    private val repository: EduTrackRepository
+    private val repository: EduTrackRepository,
+    private val authRepository: AuthRepository? = null
 ) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return when {
+            modelClass.isAssignableFrom(AuthViewModel::class.java) ->
+                AuthViewModel(authRepository!!, repository) as T
             modelClass.isAssignableFrom(DashboardViewModel::class.java) ->
-                DashboardViewModel(repository) as T
+                DashboardViewModel(repository, authRepository) as T
             modelClass.isAssignableFrom(SubjectViewModel::class.java) ->
                 SubjectViewModel(repository) as T
             modelClass.isAssignableFrom(SessionViewModel::class.java) ->
@@ -35,9 +39,9 @@ class ViewModelFactory(
             modelClass.isAssignableFrom(SettingsViewModel::class.java) ->
                 SettingsViewModel(repository) as T
             modelClass.isAssignableFrom(ProfileViewModel::class.java) ->
-                ProfileViewModel(repository) as T
+                ProfileViewModel(authRepository!!, repository) as T
             modelClass.isAssignableFrom(OnboardingViewModel::class.java) ->
-                OnboardingViewModel(repository) as T
+                OnboardingViewModel(authRepository!!, repository) as T
             else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }
     }

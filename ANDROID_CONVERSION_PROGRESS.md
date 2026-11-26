@@ -253,3 +253,90 @@ Completely eliminated generic Material 3 boxes, congested card grids, and purple
     - Delete confirmation dialog displays properly with "Cancel" and "Delete Session" actions.
     - "Cancel" preserves the session intact without unintended deletion.
 - **Updated APK**: Built and deployed to `apk/EduTrack-Minimal-Native.apk` (18.64 MB).
+
+---
+
+## 8. Real Authentication System, Personalized Onboarding, Room Database User Ownership & Multi-Account Data Isolation (Design Version 2.4)
+
+### 1. Offline-First Real Authentication Architecture
+- **Cryptographic Security (`PasswordSecurity.kt`)**:
+  - Implemented military-grade salted password hashing using `PBKDF2WithHmacSHA256` with 10,000 iterations, 32-byte salts, and 256-bit derived keys.
+  - Constant-time verification (`MessageDigest.isEqual`) to prevent timing side-channel attacks.
+  - Zero plaintext passwords in database or memory persistence.
+  - Standard `java.util.Base64` encoding ensures full JVM unit-test compatibility without Android framework stubs.
+  - Strict validation: email regex verification, minimum 6 characters, mixed alphanumeric composition check.
+- **Session Management (`SessionManager.kt`)**:
+  - Persistent encrypted/SharedPreferences session storage tracking active `currentUserId` as a reactive `StateFlow<String?>`.
+  - Supports automatic login upon account creation, explicit sign-in, and atomic logout.
+- **Authentication Flows & Screens**:
+  - `WelcomeScreen.kt`: Premium Soft Academia welcome portal with value propositions, "Create Account" and "Sign In" actions.
+  - `SignUpScreen.kt`: Full Name, Email, Password, Confirm Password fields with real-time requirement indicators and error states.
+  - `LoginScreen.kt`: University/personal email, password with show/hide toggle, error banner, and "Forgot Password" modal.
+  - `ForgotPasswordDialog.kt`: Offline password reset workflow allowing students to securely update credentials.
+
+### 2. Room Database User Ownership & Migration (`MIGRATION_1_2`)
+- **New User & Profile Entities**:
+  - `UserAccountEntity`: `id`, `fullName`, `email`, `passwordHash`, `passwordSalt`, `createdAt`, `updatedAt`, `isOnboardingCompleted`, `tutorialsCompleted`.
+  - `AcademicProfileEntity`: `userId`, `institution`, `degree`, `major`, `academicYear`, `semester`, `studentId`, `profilePhotoUri`, `updatedAt`.
+  - `StudyPreferencesEntity`: `userId`, `dailyStudyGoalMinutes`, `weeklyStudyGoalHours`, `focusDurationMinutes`, `shortBreakMinutes`, `longBreakMinutes`, `reminderPreferences`, `typicalStudyTime`, `preferredStudyDays`, `updatedAt`.
+- **User Ownership Across All 8 Academic Tables**:
+  - Added `userId: String = "default-user"` column with dedicated composite indices to:
+    - `subjects`, `study_sessions`, `tasks`, `examinations`, `goals`, `notes`, `schedule_events`, `notifications`.
+- **Database Migration (`MIGRATION_1_2`)**:
+  - Upgraded Room database version from `1` to `2`.
+  - Executes non-destructive `CREATE TABLE IF NOT EXISTS` for new auth/profile tables and `ALTER TABLE ADD COLUMN userId` for all existing academic tables.
+  - Seed data seamlessly mapped to default scholar account during upgrade.
+
+### 3. Dynamic Multi-Account Data Isolation
+- **Dynamic Scoping via `flatMapLatest` (`EduTrackRepository.kt`)**:
+  - All repository queries (`allSubjects`, `allSessions`, `allTasks`, `allExams`, `allGoals`, `allNotes`, `allScheduleEvents`, `allNotifications`) dynamically observe `currentUserId.flatMapLatest { uid -> dao.get...ForUser(uid) }`.
+  - Switching or logging out accounts instantaneously re-queries Room database, ensuring 100% data isolation between multiple users on the same device.
+
+### 4. Real Scholar Profile & Persona Deprecation
+- **Clean Deprecation**: Completely eliminated hardcoded fake scholar personas (`Julian Vance`, `Elena Rostova`, `Marcus Sterling`) from production experience.
+- **`ProfileScreen.kt` & `ProfileViewModel.kt`**:
+  - Displays authenticated student name, email, avatar monogram initials, institution, degree, major, academic year, and semester.
+  - Displays personalized study telemetry targets (daily focus goal, weekly quota, pomodoro duration, break intervals).
+  - In-place "Change Password" dialog with salted re-hashing.
+  - "Reset Help & Tutorials" allowing students to replay guided tours anytime.
+  - "Sign Out" with modal confirmation dialog.
+
+### 5. Multi-Step Personalized Onboarding Wizard (7 Steps)
+- **Step 1 — Personal Profile**: Preferred scholar name with dynamic monogram avatar generator.
+- **Step 2 — Academic Information**: University/college, degree/program, major, academic year selector, semester picker, student ID.
+- **Step 3 — Subject Setup**: Interactive course addition with course code, custom pastel color tag, weekly target hours, and enrolled courses summary.
+- **Step 4 — Focus & Study Goals**: Daily focus targets (1h, 2h, 3h, 4h), pomodoro intervals (25m, 45m, 50m, 60m), break durations (5m, 10m, 15m).
+- **Step 5 — Study Routine**: Preferred study days multi-select (M, T, W, T, F, S, S) and peak productivity time (Morning, Afternoon, Evening, Night).
+- **Step 6 — Smart Academic Reminders**: Permission explanation for local study timers, break notifications, and exam countdowns.
+- **Step 7 — Workspace Ready**: Academic workspace summary card and single-tap "Enter EduTrack" launching the authenticated dashboard.
+
+### 6. Contextual In-App Tutorials & Coach Marks
+- **Reusable `EduTrackCoachMark` Component**:
+  - Soft academia floating card with step indicator (`GUIDED TOUR · X OF Y`), title, explanation, "Previous", "Next", and "Skip" / "Got It" actions.
+  - Implemented across Dashboard, Subjects, Timer, Planner, and History screens.
+  - Progress tracked per user in `user_accounts.tutorialsCompleted` (CSV set); never repeats once dismissed, but replayable on demand from Profile settings.
+
+### 7. Session Security, Logout Flow & Back-Stack Protection
+- **Logout Confirmation Dialog**: "Log Out of EduTrack?" modal dialog explains that local data remains secure on device.
+- **Clean Backstack Pop (`popUpTo(0) { inclusive = true }`)**:
+  - Logging out purges the backstack and routes to `Screen.Welcome`.
+  - Pressing device back from the Welcome screen exits the application cleanly to the Android launcher without backstack leaks into authenticated state.
+
+### 8. Verification & Test Suite
+- **Unit Tests (`CourseworkUnitTests.kt`)**:
+  - Expanded to 12 automated JVM tests:
+    - `testPasswordSecurityHashingAndVerification`: verifies PBKDF2 hashing & verification.
+    - `testPasswordSecuritySaltUniqueness`: verifies cryptographic salt randomness.
+    - `testPasswordValidationRules`: verifies password length and alphanumeric requirements.
+    - `testEmailValidation`: verifies RFC-compliant regex validation.
+    - `testUserDataOwnershipAndIsolation`: verifies entity user-id indexing and foreign keys.
+    - `testDatabaseMigration1To2Safety`: verifies schema consistency.
+  - All 12 tests passed: `BUILD SUCCESSFUL in 31s`.
+- **Live Emulator Verification (`emulator-5554`)**:
+  - Successfully registered account `teja.reddy@oxford.edu` ("Teja Reddy").
+  - Stepped through all 7 onboarding steps, configuring subjects (`Algorithms & Data Structures`, `Linear Algebra`, `Database Systems`) and study goals.
+  - Verified Dashboard greeting `"Good evening,\nTeja"`, avatar initials `T`, and 4-step Guided Tour.
+  - Verified Profile screen with authenticated details and study preferences.
+  - Verified Logout Confirmation Dialog, redirection to Welcome screen, and back-button security.
+  - Verified Sign In with created credentials directly opened the authenticated Dashboard without repeating onboarding.
+- **Updated Production Artifact**: Built, verified, and packaged at `apk/EduTrack-Minimal-Native.apk`.

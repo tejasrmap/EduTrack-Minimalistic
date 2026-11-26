@@ -13,6 +13,7 @@ import com.gtinnox.edutrack.ui.EduTrackApp
 import com.gtinnox.edutrack.ui.theme.EduTrackTheme
 import com.gtinnox.edutrack.ui.viewmodel.AnalyticsViewModel
 import com.gtinnox.edutrack.ui.viewmodel.AssignmentViewModel
+import com.gtinnox.edutrack.ui.viewmodel.AuthViewModel
 import com.gtinnox.edutrack.ui.viewmodel.DashboardViewModel
 import com.gtinnox.edutrack.ui.viewmodel.ExamViewModel
 import com.gtinnox.edutrack.ui.viewmodel.GoalViewModel
@@ -34,8 +35,10 @@ class MainActivity : ComponentActivity() {
 
         val app = application as EduTrackApplication
         val repository = app.repository
-        val factory = ViewModelFactory(repository)
+        val authRepository = app.authRepository
+        val factory = ViewModelFactory(repository, authRepository)
 
+        val authViewModel: AuthViewModel by viewModels { factory }
         val dashboardViewModel: DashboardViewModel by viewModels { factory }
         val subjectViewModel: SubjectViewModel by viewModels { factory }
         val sessionViewModel: SessionViewModel by viewModels { factory }
@@ -58,6 +61,7 @@ class MainActivity : ComponentActivity() {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     EduTrackApp(
                         repository = repository,
+                        authViewModel = authViewModel,
                         dashboardViewModel = dashboardViewModel,
                         subjectViewModel = subjectViewModel,
                         sessionViewModel = sessionViewModel,

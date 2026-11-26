@@ -15,11 +15,12 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index(value = ["subjectId"])]
+    indices = [Index(value = ["subjectId"]), Index(value = ["userId"])]
 )
 data class StudySessionEntity(
     @PrimaryKey
     val id: String,
+    val userId: String = "default-user",
     val subjectId: String,
     val durationMinutes: Int,
     val sessionType: String, // 'pomodoro', 'deep_work', 'revision', 'reading', 'assignment'

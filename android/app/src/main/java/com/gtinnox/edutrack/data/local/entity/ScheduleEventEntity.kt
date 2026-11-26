@@ -15,11 +15,12 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index(value = ["subjectId"])]
+    indices = [Index(value = ["subjectId"]), Index(value = ["userId"])]
 )
 data class ScheduleEventEntity(
     @PrimaryKey
     val id: String,
+    val userId: String = "default-user",
     val title: String,
     val subjectId: String,
     val date: String, // YYYY-MM-DD

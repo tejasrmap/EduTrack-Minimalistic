@@ -11,8 +11,14 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ExaminationDao {
+    @Query("SELECT * FROM examinations WHERE userId = :userId ORDER BY examDate ASC, examTime ASC")
+    fun getExaminationsForUser(userId: String): Flow<List<ExaminationEntity>>
+
     @Query("SELECT * FROM examinations ORDER BY examDate ASC, examTime ASC")
     fun getAllExaminations(): Flow<List<ExaminationEntity>>
+
+    @Query("SELECT * FROM examinations WHERE subjectId = :subjectId AND userId = :userId ORDER BY examDate ASC")
+    fun getExaminationsForSubjectAndUser(subjectId: String, userId: String): Flow<List<ExaminationEntity>>
 
     @Query("SELECT * FROM examinations WHERE subjectId = :subjectId ORDER BY examDate ASC")
     fun getExaminationsForSubject(subjectId: String): Flow<List<ExaminationEntity>>

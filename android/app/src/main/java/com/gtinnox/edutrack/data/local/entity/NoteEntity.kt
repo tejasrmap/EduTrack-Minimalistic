@@ -1,12 +1,17 @@
 package com.gtinnox.edutrack.data.local.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "notes")
+@Entity(
+    tableName = "notes",
+    indices = [Index(value = ["userId"])]
+)
 data class NoteEntity(
     @PrimaryKey
     val id: String,
+    val userId: String = "default-user",
     val title: String,
     val content: String,
     val subjectId: String? = null,
