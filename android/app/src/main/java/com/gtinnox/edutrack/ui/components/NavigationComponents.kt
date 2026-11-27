@@ -224,7 +224,6 @@ fun EduTrackBottomBar(
         BottomNavItem.More
     )
 
-    val isCompact = isCompactScreen()
     val horizontalPadding = adaptiveHorizontalPadding()
 
     Box(
@@ -250,48 +249,25 @@ fun EduTrackBottomBar(
             ) {
                 items.forEach { item ->
                     val isSelected = currentRoute == item.route
-                    val isFocus = item == BottomNavItem.Focus
 
-                    val targetBg = when {
-                        isSelected -> SoftSage
-                        isFocus -> MutedSage.copy(alpha = 0.5f)
-                        else -> Color.Transparent
-                    }
+                    val targetBg = if (isSelected) SoftSage else Color.Transparent
                     val bgAnimated by animateColorAsState(targetValue = targetBg, label = "navBg")
 
                     Box(
                         modifier = Modifier
                             .weight(1f)
                             .height(44.dp)
-                            .clip(RoundedCornerShape(Dimens.radiusMedium))
+                            .clip(RoundedCornerShape(Dimens.radiusPill))
                             .clickable { onNavigate(item.route) }
                             .background(bgAnimated),
                         contentAlignment = Alignment.Center
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.padding(horizontal = 4.dp)
-                        ) {
-                            Icon(
-                                imageVector = item.icon,
-                                contentDescription = item.title,
-                                tint = if (isSelected) PrimaryForest else MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(Dimens.iconStandard)
-                            )
-                            if (isSelected && !isCompact) {
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = item.title,
-                                    style = MaterialTheme.typography.labelMedium.copy(
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = DeepForest
-                                    ),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                        }
+                        Icon(
+                            imageVector = item.icon,
+                            contentDescription = item.title,
+                            tint = if (isSelected) PrimaryForest else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(Dimens.iconStandard)
+                        )
                     }
                 }
             }
